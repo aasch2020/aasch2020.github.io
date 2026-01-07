@@ -1,0 +1,14 @@
+# VS Code settings
+.vscode/
+
+# Copilot instructions
+.github/copilot-instructions.md
+
+# Jekyll build files
+_site/
+.jekyll-cache/
+.jekyll-metadata
+
+# OS files
+.DS_Store
+Thumbs.db
