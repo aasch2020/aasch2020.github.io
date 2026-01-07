@@ -31,4 +31,4 @@ theme: jekyll-theme-minimal
 
 ---
 
-[← Back to Home](./README.md)
+[← Back to Home](index.html)

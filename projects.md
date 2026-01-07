@@ -43,4 +43,4 @@ A full-stack web application that [brief description]. The project demonstrates 
 
 ---
 
-[← Back to Home](./README.md)
+[← Back to Home](index.html)
