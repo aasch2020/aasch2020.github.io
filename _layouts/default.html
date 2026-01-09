@@ -231,11 +231,14 @@
                 font-size: 1.4rem;
             }
         }
-
-        /* Page transition: fade-out on navigation */
+        /* Page transition helpers */
         html {
-            opacity: 1;
+            opacity: 0;
             transition: opacity 360ms ease;
+        }
+
+        html.fade-in {
+            opacity: 1;
         }
 
         html.fade-out {
@@ -266,5 +269,51 @@
     <main>
         {{ content }}
     </main>
+        <script>
+        (function(){
+            var FADE_IN_CLASS = 'fade-in';
+            var FADE_OUT_CLASS = 'fade-out';
+            var DURATION = 360; // ms, matches CSS
+
+            function isInternalLink(a){
+                try{
+                    var href = a.getAttribute('href');
+                    if(!href) return false;
+                    if(href.indexOf('mailto:') === 0) return false;
+                    if(href.indexOf('tel:') === 0) return false;
+                    if(href.indexOf('#') === 0) return false;
+                    if(a.target && a.target === '_blank') return false;
+                    if(href.indexOf(location.origin) === 0) return true;
+                    if(href.charAt(0) === '/') return true;
+                    return false;
+                }catch(e){ return false; }
+            }
+
+            // Fade in on load
+            document.addEventListener('DOMContentLoaded', function(){
+                // small delay to allow paint
+                requestAnimationFrame(function(){
+                    document.documentElement.classList.add(FADE_IN_CLASS);
+                });
+            });
+
+            // Intercept internal link clicks
+            document.addEventListener('click', function(e){
+                var el = e.target;
+                while(el && el.tagName !== 'A') el = el.parentNode;
+                if(!el) return;
+                if(!isInternalLink(el)) return;
+                var href = el.getAttribute('href');
+                if(!href) return;
+                if(href.indexOf('#') === 0) return; // allow anchors
+
+                e.preventDefault();
+                // start fade out
+                document.documentElement.classList.remove(FADE_IN_CLASS);
+                document.documentElement.classList.add(FADE_OUT_CLASS);
+                setTimeout(function(){ window.location.href = href; }, DURATION);
+            }, false);
+        })();
+        </script>
 </body>
 </html>
