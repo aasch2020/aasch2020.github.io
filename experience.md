@@ -1,6 +1,7 @@
 ---
 layout: default
-theme: jekyll-theme-minimal
+title: Work Experience
+permalink: /experience/
 ---
 
 # Work Experience
@@ -31,4 +32,4 @@ theme: jekyll-theme-minimal
 
 ---
 
-[← Back to Home](index.html)
+[← Back to Home](/)

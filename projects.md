@@ -1,6 +1,7 @@
 ---
 layout: default
-theme: jekyll-theme-minimal
+title: Projects
+permalink: /projects/
 ---
 
 # Projects
@@ -43,4 +44,4 @@ A full-stack web application that [brief description]. The project demonstrates 
 
 ---
 
-[← Back to Home](index.html)
+[← Back to Home](/)

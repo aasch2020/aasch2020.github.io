@@ -1,6 +1,7 @@
 ---
 layout: default
-theme: jekyll-theme-minimal
+title: Education
+permalink: /education/
 ---
 
 # Education
@@ -28,4 +29,4 @@ theme: jekyll-theme-minimal
 
 ---
 
-[← Back to Home](index.html)
+[← Back to Home](/)

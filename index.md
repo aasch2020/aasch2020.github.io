@@ -1,6 +1,7 @@
 ---
 layout: default
-theme: jekyll-theme-minimal
+title: Welcome
+permalink: /
 ---
 
 # Welcome to My Portfolio
@@ -15,9 +16,9 @@ I enjoy working across the full stack, from backend systems to user-facing front
 
 ## Quick Navigation
 
-- **[Education](/education.html)** – Academic background and certifications
-- **[Work Experience](/experience.html)** – Professional history and achievements
-- **[Projects](/projects.html)** – Portfolio of work and personal projects
+- **[Education](/education/)** – Academic background and certifications
+- **[Work Experience](/experience/)** – Professional history and achievements
+- **[Projects](/projects/)** – Portfolio of work and personal projects
 
 ---
 
