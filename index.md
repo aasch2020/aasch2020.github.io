@@ -7,11 +7,7 @@ permalink: /
 # Welcome to My Portfolio
 
 ## About Me
-
-Hello! I'm a passionate developer and technology enthusiast with a keen interest in building innovative solutions and continuously expanding my skillset. I bring a blend of technical expertise, problem-solving abilities, and a commitment to clean, maintainable code.
-
-I enjoy working across the full stack, from backend systems to user-facing frontend applications. My experience spans multiple domains, and I'm always eager to learn new technologies and best practices.
-
+flavortext
 ---
 
 ## Quick Navigation
