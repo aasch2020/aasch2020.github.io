@@ -12,21 +12,36 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor i
 
 Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 ---
+# Welcome
+
+## About
+
+Alex Asch — M.S. student at University of California San Diego (Computer Science). I focus on systems and security work with experience in application security, full‑stack development, and research-driven projects. My background spans embedded systems, cloud/virtualization, and practical security tooling.
+
+---
 
 ## Quick Navigation
 
-- **[Education](/education/)** – Academic background and certifications
-- **[Work Experience](/experience/)** – Professional history and achievements
-- **[Projects](/projects/)** – Portfolio of work and personal projects
+- **[Education](/education/)**
+- **[Work Experience](/experience/)**
+- **[Projects](/projects/)**
 
 ---
 
-## Get in Touch
+## Contact
 
-Feel free to reach out to me via:
-- **GitHub**: [aasch2020](https://github.com/aasch2020)
-- **Email**: [your.email@example.com](mailto:your.email@example.com)
+- **Email:** a.asch2020@gmail.com
+- **Phone:** 406-623-7277
+- **Location:** San Diego, CA
+- **GitHub:** [aasch2020](https://github.com/aasch2020)
+- **LinkedIn:** [alex-asch](https://www.linkedin.com/in/alex-asch-755270219/)
 
 ---
 
-*Last updated: January 2026*
+## Skills (select)
+
+Shell · Git · Python · C/C++ · JavaScript · TypeScript · Java · Golang · Docker · BurpSuite · GDB · Ghidra · scikit-learn · WebGPU
+
+---
+
+*This site contains work‑in‑progress content pulled from an existing CV — pages are intentionally concise where details are pending.*

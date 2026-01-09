@@ -3,44 +3,41 @@ layout: default
 title: Projects
 permalink: /projects/
 ---
-
 # Projects
 
-## Project 1: [Project Name]
-**Technologies**: Lorem, Ipsum, Dolor
+## Trellix Software — TLS Analysis
+**University of California San Diego** | June 2025
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+- Used `bpftrace` to capture and analyze TLS traffic for the Trellix monitoring platform.
+- Investigated unencrypted user device data transmission to central servers and evaluated implications.
 
-- **Features**: Ut enim ad minim veniam, quis nostrud exercitation, ullamco laboris nisi.
-- **Impact**: [User metrics or business impact]
-- **GitHub**: [Link to repository]
-- **Demo**: [Link to live demo]
+## Enhancing KVM Page Eviction: From FIFO to Approximate LRU
+**University of California San Diego** | June 2025
 
-## Project 2: [Project Name]
-**Technologies**: Sit, Amet, Consectetur
+- Worked on shadow page table implementation in KVM to improve paging policy from FIFO to approximate LRU.
+- Measured performance using `stress-ng` and `redis-benchmark` workloads.
 
-Adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.
+## Computer-Vision Driven Automated Bicycle Braking
+**University of California San Diego** | December 2025
 
-- **Features**: Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea.
-- **Performance**: Achieved notable results in testing and production.
-- **GitHub**: [Link to repository]
+- Implemented Lucas–Kanade optical flow to detect collisions and created a GPIO driver to actuate braking control.
 
-## Project 3: [Project Name]
-**Technologies**: Sed, Do, Eiusmod
+## LLM-Based Security Framework for Chatbot Agents
+**University of California San Diego** | September 2025
 
-Tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco.
+- Built an LLM-based framework to precompute access controls for chatbot prompts and implemented a stateful XML reference monitor to restrict access during agent execution.
 
-- **Features**: Laboris nisi ut aliquip ex ea commodo consequat duis aute irure.
-- **Metrics**: Lorem ipsum dolor sit amet, consectetur adipiscing.
-- **GitHub**: [Link to repository]
-- **Live Site**: [Link to deployment]
+## Slugquest Project
+**University of California Santa Cruz** | Jan 2024 – Mar 2024
 
-## Open Source Contributions
+- Developed a collaborative/gamified to‑do web app; implemented Golang backend (Gin) with SQLite.
 
-### Notable Project
-- Contributed improvements and enhancements to the project.
-- Active project maintained by many developers with significant community engagement.
-- [Link to contribution](https://github.com)
+## Bloombase Project
+**University of California Santa Cruz** | Mar 2023 – June 2023
+
+- Built a web app that visualizes iNaturalist blooms, integrates Google Maps, and allows users to post and save journal entries.
+- Implemented map-based querying to optimize large datasets.
+- GitHub: https://github.com/BloomBase183/BloomBase
 
 ---
 

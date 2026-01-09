@@ -6,26 +6,25 @@ permalink: /education/
 
 # Education
 
-## Bachelor of Science in Computer Science
-**Lorem University** | Graduation: [Year]
+## M.S. in Computer Science
+**University of California San Diego** | Sept 2024 – Ongoing
 
-- GPA: [GPA]
-- Relevant Coursework: Data Structures, Algorithms, Database Systems, Web Development, Software Engineering, Machine Learning
-- Honors: [Dean's List, Scholarships, etc.]
+- GPA: 3.96 / 4.0
+- Focus: Graduate Computer Security, Virtualization, Networked Services
 
-## Certifications
+## B.S. in Computer Science
+**University of California Santa Cruz** | Sept 2020 – June 2024
 
-### Cloud Computing
-- **AWS Certified Solutions Architect** | Valid through [Date]
-- **Google Cloud Professional Data Engineer** | Valid through [Date]
+- GPA: 3.85 / 4.0 — Graduated Cum Laude
+- Relevant coursework: Algorithms, Databases, Embedded Computing, Systems
 
-### Programming & Development
-- **Full Stack Web Development Certificate** | Lorem Ipsum Institution
-- **Advanced Python Programming** | Dolor Sit Amet University
+---
 
-## Additional Learning
-- Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-- Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+## Certifications & Training
+
+- AWS Certified Solutions Architect (placeholder)
+- Google Cloud Professional (placeholder)
+- Coursework & self-study: Full‑stack development, security tooling, systems programming
 
 ## Additional Learning
 - Self-taught expertise in modern frameworks and tools (React, Node.js, etc.)
