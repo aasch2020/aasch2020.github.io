@@ -7,7 +7,7 @@ permalink: /education/
 # Education
 
 ## Bachelor of Science in Computer Science
-**University Name** | Graduation: [Year]
+**Lorem University** | Graduation: [Year]
 
 - GPA: [GPA]
 - Relevant Coursework: Data Structures, Algorithms, Database Systems, Web Development, Software Engineering, Machine Learning
@@ -20,8 +20,12 @@ permalink: /education/
 - **Google Cloud Professional Data Engineer** | Valid through [Date]
 
 ### Programming & Development
-- **Full Stack Web Development Certificate** | [Institution]
-- **Advanced Python Programming** | [Institution]
+- **Full Stack Web Development Certificate** | Lorem Ipsum Institution
+- **Advanced Python Programming** | Dolor Sit Amet University
+
+## Additional Learning
+- Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+- Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 
 ## Additional Learning
 - Self-taught expertise in modern frameworks and tools (React, Node.js, etc.)

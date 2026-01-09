@@ -231,12 +231,22 @@
                 font-size: 1.4rem;
             }
         }
+
+        /* Page transition: fade-out on navigation */
+        html {
+            opacity: 1;
+            transition: opacity 360ms ease;
+        }
+
+        html.fade-out {
+            opacity: 0;
+        }
     </style>
 </head>
 <body>
     <aside>
         <div class="sidebar-header">
-            <h1>aasch2020</h1>
+            <h1>Alex Asch</h1>
             <p>Software Engineer & Developer</p>
         </div>
 
