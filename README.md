@@ -10,19 +10,6 @@ A quicker, cleaner way to get started blogging with [Hydejack](https://hydejack.
 4. Run `bundle exec jekyll serve`
 5. Open <http://localhost:4000/hydejack-starter-kit/>
 
-## Resume / CV
-This repository now includes a LaTeX source file for a resume: `resume.tex`.
-
-To produce a PDF locally (recommended: XeLaTeX):
-
-```powershell
-# Example using XeLaTeX (Windows PowerShell)
-choco install miktex -y        # if you don't have a TeX distribution (optional)
-xelatex -shell-escape resume.tex
-```
-
-If you prefer `pdflatex` or `lualatex`, those work too. The file uses the AltaCV class and may require the `fontawesome5`, `simpleicons`, `roboto`, and `lato` packages; install them via your TeX distribution's package manager if compilation fails.
-
 ## What's next?
 * Open files and read the comments
 * Read the [docs](https://hydejack.com/docs/)
