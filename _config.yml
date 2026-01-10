@@ -94,7 +94,7 @@ theme: jekyll-theme-hydejack
 # ----------------------------------------------------------------------------------------
  
 # Sidebar image and theme color of the site.
-accent_image:          /assets/image/PXL_20240915_220937553.jpg
+accent_image:          /assets/image/bg.jpg
 accent_color:          rgb(79,177,186)
 
 # This is used for the `theme-color` meta tag, 
