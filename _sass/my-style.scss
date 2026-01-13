@@ -4,6 +4,12 @@
   gap: 1.5rem !important;
   margin: 2rem 0 !important;
   width: 100% !important;
+  float: none !important;
+}
+
+.three-col-grid > * {
+  float: none !important;
+  display: block !important;
 }
 
 /* Hydejack-style cards */
@@ -19,6 +25,10 @@
   transition: all 0.3s ease !important;
   overflow: hidden !important;
   box-sizing: border-box !important;
+  width: auto !important;
+  float: none !important;
+  margin: 0 !important;
+  line-height: inherit !important;
 
   &:hover {
     opacity: 0.85;
@@ -31,16 +41,20 @@
     flex-shrink: 0 !important;
     order: -1 !important;
     display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   h3 {
     margin: 1rem 1.25rem 0.25rem 1.25rem !important;
     padding: 0 !important;
+    float: none !important;
   }
 
   p {
     margin: 0 1.25rem 1.25rem 1.25rem !important;
     padding: 0 !important;
+    float: none !important;
   }
 }
 
