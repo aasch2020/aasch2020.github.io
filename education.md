@@ -1,7 +1,3 @@
-layout: page
-title: Education
----
-
 # Education
 
 ## University of California San Diego — M.S. in Computer Science

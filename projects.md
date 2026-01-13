@@ -1,7 +1,3 @@
-layout: page
-title: Projects
----
-
 # Projects
 
 ## Trellix Software TLS Analysis — University of California San Diego
