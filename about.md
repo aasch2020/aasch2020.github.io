@@ -37,7 +37,7 @@ Use the navigation to view my [Experience](/experience/), [Education](/education
 
 ## Resume
 
-If you need a PDF resume, contact me via email and I’ll send the latest copy.
+pdf link
 
 
 ## Skills Snapshot
@@ -47,5 +47,5 @@ Python, C/C++, Java, Go, JavaScript/TypeScript, React, Angular, Docker, GDB, Bur
 
 ## Contact
 
-For opportunities or questions, email me at a.asch2020@gmail.com.
+link
 
