@@ -1,55 +1,28 @@
-.project-card {
+.three-col-grid {
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  // grid-template-columns: auto 3fr auto;
-  grid-template-areas:
-    "title"
-    "image"
-    "meta";
-
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
-
-  text-decoration: none;
-  color: inherit;
-  cursor: pointer;
-  transition: opacity 0.3s ease;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
 }
 
-.project-card:hover {
-  opacity: 0.8;
+/* Hydejack-style cards */
+.grid-card {
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+  background: var(--body-bg, #fff);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
-/* Force ordering regardless of DOM order */
-.project-card h2 {
-  grid-area: title;
-  margin: 0 0 0.25rem 0;
-  font-size: 1.3rem;
-  font-weight: 600;
-  line-height: 1.3;
-
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+/* Tablet */
+@media (max-width: 900px) {
+  .three-col-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-.project-card img {
-  grid-area: image;
-  width: 100%;
-  aspect-ratio: 4 / 3; 
-  object-fit: cover;
-  display: block;
-}
-
-.project-card .project-meta {
-  grid-area: meta;
-  margin: 0;
-  padding-top: 0.25rem;
-  font-size: 0.85rem;
-  color: var(--text-muted, #999);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+/* Mobile */
+@media (max-width: 600px) {
+  .three-col-grid {
+    grid-template-columns: 1fr;
+  }
 }
