@@ -1,8 +1,9 @@
 .three-col-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
   margin: 2rem 0;
+  width: 100%;
 }
 
 /* Hydejack-style cards */
@@ -17,8 +18,7 @@
   color: inherit;
   transition: all 0.3s ease;
   overflow: hidden;
-  min-width: 0;
-  width: 100%;
+  box-sizing: border-box;
 
   &:hover {
     opacity: 0.85;
@@ -31,14 +31,11 @@
     flex-shrink: 0;
     order: -1;
     display: block;
-    max-width: 100%;
   }
 
   h3 {
     margin: 1rem 1.25rem 0.25rem 1.25rem;
     padding: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   p {
