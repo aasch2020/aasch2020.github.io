@@ -33,3 +33,5 @@
 </a>
 
 </div>
+
+<script src="/assets/js/projects.js"></script>
