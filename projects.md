@@ -1,67 +1,110 @@
 # Projects
 
 <div class="three-col-grid">
-  <div class="grid-card">
+  <a href="/projects/trellix-tls" class="grid-card">
     <img
-      src="/assets/img/projects/project1.jpg"
-      alt="Project One preview"
+      src="/assets/img/projects/trellix-tls.svg"
+      alt="Trellix TLS Analysis"
       class="card-image"
     />
 
-    <h3>Project One</h3>
+    <h3>Trellix TLS Analysis</h3>
 
     <div class="card-two-col">
       <div>
-        <p>Main description goes here. This is the primary content column.</p>
+        <p>Utilized bpftrace to capture unencrypted TLS traffic for Trellix security monitoring platform; analyzed captured traffic.</p>
       </div>
 
       <div class="card-meta">
-        <p><strong>Tech:</strong> C, Rust</p>
-        <p><strong>Year:</strong> 2025</p>
+        <p><strong>Tech:</strong> bpftrace, TLS</p>
+        <p><strong>Date:</strong> June 2025</p>
       </div>
     </div>
-  </div>
+  </a>
 
-  <div class="grid-card">
+  <a href="/projects/kvm-paging" class="grid-card">
     <img
-      src="/assets/img/projects/project2.jpg"
-      alt="Project Two preview"
+      src="/assets/img/projects/kvm-paging.svg"
+      alt="KVM Page Eviction"
       class="card-image"
     />
 
-    <h3>Project Two</h3>
+    <h3>KVM Page Eviction</h3>
 
     <div class="card-two-col">
       <div>
-        <p>Another description or summary.</p>
+        <p>Implemented approximate LRU paging policy to optimize KVM shadow page tables; evaluated with stress-ng and redis-benchmark.</p>
       </div>
 
       <div class="card-meta">
-        <p><strong>Status:</strong> Active</p>
-        <p><strong>Role:</strong> Lead</p>
+        <p><strong>Tech:</strong> KVM, C</p>
+        <p><strong>Date:</strong> June 2025</p>
       </div>
     </div>
-  </div>
+  </a>
 
-  <div class="grid-card">
+  <a href="/projects/bicycle-cv" class="grid-card">
     <img
-      src="/assets/img/projects/project3.jpg"
-      alt="Project Three preview"
+      src="/assets/img/projects/bicycle-cv.svg"
+      alt="Bicycle Braking"
       class="card-image"
     />
 
-    <h3>Project Three</h3>
+    <h3>Bicycle Braking</h3>
 
     <div class="card-two-col">
       <div>
-        <p>Primary content column.</p>
+        <p>Developed real-time collision detection using Lucas-Kanade optical flow and integrated GPIO driver for closed-loop braking control.</p>
       </div>
 
       <div class="card-meta">
-        <p><strong>Type:</strong> Research</p>
+        <p><strong>Tech:</strong> OpenCV, Python</p>
+        <p><strong>Date:</strong> December 2025</p>
       </div>
     </div>
-  </div>
+  </a>
+
+  <a href="/projects/bloombase" class="grid-card">
+    <img
+      src="/assets/img/projects/bloombase.svg"
+      alt="Bloombase"
+      class="card-image"
+    />
+
+    <h3>Bloombase</h3>
+
+    <div class="card-two-col">
+      <div>
+        <p>Built web app integrating iNaturalist API with Py4Web backend and Google Maps frontend for biodiversity mapping and visualization.</p>
+      </div>
+
+      <div class="card-meta">
+        <p><strong>Tech:</strong> Py4Web, APIs</p>
+        <p><strong>Date:</strong> Mar–June 2023</p>
+      </div>
+    </div>
+  </a>
+
+  <a href="/projects/llm-security" class="grid-card">
+    <img
+      src="/assets/img/projects/llm-security.svg"
+      alt="LLM Security Framework"
+      class="card-image"
+    />
+
+    <h3>LLM Security Framework</h3>
+
+    <div class="card-two-col">
+      <div>
+        <p>Developed LLM-driven framework with XML-based reference monitor to mitigate prompt injection attacks in chatbot agents.</p>
+      </div>
+
+      <div class="card-meta">
+        <p><strong>Tech:</strong> LLMs, Security</p>
+        <p><strong>Date:</strong> September 2025</p>
+      </div>
+    </div>
+  </a>
 </div>
 
 <script src="/assets/js/projects.js"></script>
