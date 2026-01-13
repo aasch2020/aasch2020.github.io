@@ -34,10 +34,6 @@ spotify:
 telegram:
   name: Telegram
   icon: icon-telegram
-linkedin:
-  name: LinkedIn
-  icon: icon-linkedin
-  prepend: 'https://www.linkedin.com/in/'
 vine:
   name: Vine
   icon: icon-vine
