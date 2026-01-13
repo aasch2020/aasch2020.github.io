@@ -27,11 +27,6 @@
   @media (min-width: 1024px) {
     grid-template-columns: repeat(3, 1fr);
   }
-
-  &.fading .project-card:not(.active) {
-    opacity: 0.3;
-    pointer-events: none;
-  }
 }
 
 .project-card {
@@ -53,8 +48,8 @@
     }
   }
 
-  &.active img {
-    animation: zoomImage 0.5s ease-out forwards;
+  &.zooming img {
+    animation: zoomFullWidth 0.6s ease-out forwards;
   }
 
   img {
@@ -81,15 +76,13 @@
   }
 }
 
-@keyframes zoomImage {
+@keyframes zoomFullWidth {
   0% {
     transform: scale(1);
   }
-  50% {
-    transform: scale(1.2);
-  }
   100% {
-    transform: scale(1);
+    transform: scale(100) translateZ(0);
+    filter: brightness(1.1);
   }
 }
 
