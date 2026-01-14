@@ -1,6 +1,7 @@
 .project-card {
   display: grid;
   grid-template-rows: auto 1fr auto;
+  grid-template-columns: auto 3fr auto;
   grid-template-areas:
     "title"
     "image"
