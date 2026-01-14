@@ -1,83 +1,58 @@
-.dl-table {
-  a {
-    @supports ((text-decoration-thickness: initial) and (text-underline-offset: initial)) {
-      text-underline-offset: .8rem;
+  .dl-table {
+    a {
+      @supports ((text-decoration-thickness: initial) and (text-underline-offset: initial)) {
+        text-underline-offset: .8rem;
+      }
+      @supports not ((text-decoration-thickness: initial) and (text-underline-offset: initial)) {
+        padding-bottom: .45rem;
+      }
     }
-    @supports not ((text-decoration-thickness: initial) and (text-underline-offset: initial)) {
-      padding-bottom: .45rem;
+
+    .btn, .gumroad-button  {
+      margin: 1rem 0;
     }
   }
 
-  .btn, .gumroad-button  {
-    margin: 1rem 0;
+
+  .projects-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin: 2rem 0;
+    align-items: stretch;
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (min-width: 1024px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
   }
-}
-
-
-.projects-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 2rem;
-  margin: 2rem 0;
-
-  @media (min-width: 768px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (min-width: 1024px) {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
 .project-card {
   display: grid;
-  grid-template-rows: auto 220px auto; /* title | image | meta */
-  height: 100%; /* ensure parent controls card height */
-  border-radius: 0;
-  overflow: hidden; /* hard stop: nothing leaks */
-  transition: opacity 0.3s ease;
-  cursor: pointer;
-  text-decoration: none;
-  color: inherit;
-  background: var(--card-bg, transparent);
-}
-
-.project-card:hover {
-  opacity: 0.8;
-}
-
-.project-card.fading {
-  opacity: 0.3;
-}
-
-/* Title */
-.project-card h2 {
-  margin: 0;
-  padding: 0 0 0.25rem 0;
-  font-size: 1.3rem;
-  font-weight: 600;
-  line-height: 1.3;
-
-  display: -webkit-box;
-  -webkit-line-clamp: 1; /* force single line */
-  -webkit-box-orient: vertical;
+  grid-template-rows: auto 220px auto;
+  height: 100%;
+  min-height: 0;
   overflow: hidden;
+  cursor: pointer;
 }
 
-/* Image */
+.project-card h2 {
+  -webkit-line-clamp: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
 .project-card img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
+  min-height: 0;
 }
 
-/* Subtext / date */
 .project-card .project-meta {
-  margin: 0;
-  padding: 0.25rem 0 0;
-  font-size: 0.85rem;
-  color: var(--text-muted, #999);
   white-space: nowrap;
-  overflow: hidden;
   text-overflow: ellipsis;
+  overflow: hidden;
+  min-height: 0;
 }
