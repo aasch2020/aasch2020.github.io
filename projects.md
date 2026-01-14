@@ -9,9 +9,9 @@
 </a>
 
 <a href="/projects/kvm-paging/" class="project-card">
+<h2>KVM Page Eviction</h2>
 <p class="project-meta">June 2025 · UCSD</p>
 <img src="/assets/img/projects/kvm-paging.svg" alt="Enhancing KVM Page Eviction">
-<h2>KVM Page Eviction</h2>
 </a>
 
 <a href="/projects/bicycle-cv/" class="project-card">
