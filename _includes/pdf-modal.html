@@ -20,28 +20,52 @@ Usage: {% include pdf-modal.html file="/assets/pdfs/KVM.pdf" label="View PDF" %}
 </div>
 
 <script>
-(function() {
-  const btn = document.getElementById('view-pdf-{{ pdf_id }}');
-  const modal = document.getElementById('pdf-modal-{{ pdf_id }}');
-  const closeBtn = modal.querySelector('.pdf-modal-close');
-  if (!btn || !modal || !closeBtn) return;
+// Ensure modal wiring works on initial load and Hydejack SPA page loads
+(function initPdfModal(){
+  function wire(){
+    var btn = document.getElementById('view-pdf-{{ pdf_id }}');
+    var modal = document.getElementById('pdf-modal-{{ pdf_id }}');
+    if (!btn || !modal) return;
+    var closeBtn = modal.querySelector('.pdf-modal-close');
+    if (!closeBtn) return;
 
-  btn.addEventListener('click', function() {
-    modal.classList.add('open');
-    modal.setAttribute('aria-hidden', 'false');
-  });
-
-  closeBtn.addEventListener('click', function(e) {
-    modal.classList.remove('open');
-    modal.setAttribute('aria-hidden', 'true');
-  });
-
-  // Close when clicking backdrop
-  modal.addEventListener('click', function(e) {
-    if (e.target === modal) {
-      modal.classList.remove('open');
-      modal.setAttribute('aria-hidden', 'true');
+    // Avoid multiple bindings
+    if (!btn._pdfModalBound) {
+      btn.addEventListener('click', function(){
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+      });
+      btn._pdfModalBound = true;
     }
-  });
+
+    if (!closeBtn._pdfModalBound) {
+      closeBtn.addEventListener('click', function(){
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+      });
+      closeBtn._pdfModalBound = true;
+    }
+
+    if (!modal._pdfBackdropBound) {
+      modal.addEventListener('click', function(e){
+        if (e.target === modal) {
+          modal.classList.remove('open');
+          modal.setAttribute('aria-hidden', 'true');
+        }
+      });
+      modal._pdfBackdropBound = true;
+    }
+  }
+
+  // Initial wiring
+  wire();
+
+  // Hydejack push-state wiring on dynamic loads
+  var ps = document.getElementById('_pushState');
+  if (ps) {
+    ps.addEventListener('hy-push-state-after', function(){
+      wire();
+    });
+  }
 })();
 </script>
