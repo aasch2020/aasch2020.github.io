@@ -50,7 +50,7 @@
   <a href="/projects/bicycle-cv" class="grid-card">
     <div class="card-image-box">
       <img
-        src="/assets/img/projects/bicycle-cv.svg"
+        src="/assets/img/projects/bike-brake-title.jpg"
         alt="Bicycle Braking"
         class="card-image"
       />
