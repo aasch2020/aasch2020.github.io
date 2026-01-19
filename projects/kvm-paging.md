@@ -19,7 +19,7 @@ Worked on shadow page table implementation to optimize paging policy; evaluated 
 - Optimized shadow page table handling in KVM
 - Conducted comprehensive performance evaluation with industry-standard benchmarks
 
-## Paper
+## Sources
 
 <p>
 	<a href="/assets/pdfs/KVM.pdf" class="btn" target="_blank" rel="noopener">View PDF</a>

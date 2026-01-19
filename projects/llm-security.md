@@ -20,7 +20,7 @@ Developed an LLM-driven framework and XML-based reference monitor to limit promp
 - Implemented XML-based reference monitor for attack prevention
 - Addressed prompt injection vulnerabilities in chatbot systems
 
-## Paper
+## Sources
 
 <p>
 	<a href="/assets/pdfs/LLMSecurityFramework.pdf" class="btn" target="_blank" rel="noopener">View PDF</a>

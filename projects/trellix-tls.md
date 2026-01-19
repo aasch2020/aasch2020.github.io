@@ -17,7 +17,7 @@ Utilized bpftrace to capture unencrypted TLS traffic for Trellix security monito
 - Implemented eBPF-based traffic capture for encrypted connection analysis
 - Analyzed network traffic patterns for security monitoring purposes
 
-## Paper
+## Sources
 
 <p>
 	<a href="/assets/pdfs/Trellix.pdf" class="btn" target="_blank" rel="noopener">View PDF</a>
