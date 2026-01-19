@@ -49,6 +49,76 @@ Code for integrating CloudFlare's email protection with Hydejack's single page a
   });
 </script>
 
+<script>
+  // PDF modal wiring: works on initial load and Hydejack SPA loads
+  (function(){
+    function wirePdfModals(){
+      var modals = document.querySelectorAll('.pdf-modal');
+      modals.forEach(function(modal){
+        var id = modal.id || '';
+        if (!id.startsWith('pdf-modal-')) return;
+        var suffix = id.substring('pdf-modal-'.length);
+        var btn = document.getElementById('view-pdf-' + suffix);
+        var closeBtn = modal.querySelector('.pdf-modal-close');
+        if (!btn || !closeBtn) return;
+
+        if (!btn._pdfModalBound){
+          btn.addEventListener('click', function(){
+            modal.classList.add('open');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+          });
+          btn._pdfModalBound = true;
+        }
+
+        if (!closeBtn._pdfModalBound){
+          closeBtn.addEventListener('click', function(){
+            modal.classList.remove('open');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+          });
+          closeBtn._pdfModalBound = true;
+        }
+
+        if (!modal._pdfBackdropBound){
+          modal.addEventListener('click', function(e){
+            if (e.target === modal){
+              modal.classList.remove('open');
+              modal.setAttribute('aria-hidden', 'true');
+              document.body.style.overflow = '';
+            }
+          });
+          modal._pdfBackdropBound = true;
+        }
+
+        if (!modal._pdfEscBound){
+          document.addEventListener('keydown', function(e){
+            if (e.key === 'Escape' && modal.classList.contains('open')){
+              modal.classList.remove('open');
+              modal.setAttribute('aria-hidden', 'true');
+              document.body.style.overflow = '';
+            }
+          });
+          modal._pdfEscBound = true;
+        }
+      });
+    }
+
+    // Initial wire
+    if (document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', wirePdfModals);
+    } else {
+      wirePdfModals();
+    }
+
+    // Re-wire on Hydejack SPA navigation
+    var ps = document.getElementById('_pushState');
+    if (ps){
+      ps.addEventListener('hy-push-state-after', wirePdfModals);
+    }
+  })();
+  </script>
+
 {% comment %}
 <!--
 Example code for using Matamo as alternative analytics solution.
