@@ -24,7 +24,7 @@
 
   <a href="/projects/kvm-paging" class="grid-card">
     <img
-      src="/assets/img/projects/kvm-paging.svg"
+      src="/assets/img/projects/kvm.png"
       alt="KVM Page Eviction"
       class="card-image"
     />
@@ -87,7 +87,7 @@
 
   <a href="/projects/llm-security" class="grid-card">
     <img
-      src="/assets/img/projects/llm-security.svg"
+      src="/assets/img/projects/LLMSecurity.png"
       alt="LLM Security Framework"
       class="card-image"
     />
