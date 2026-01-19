@@ -19,7 +19,6 @@ Utilized bpftrace to capture unencrypted TLS traffic for Trellix security monito
 
 ## Paper
 
-<object data="/assets/pdfs/Trellix.pdf#view=FitH" type="application/pdf" width="100%" height="800">
-	<p>Can’t display the PDF here. <a href="/assets/pdfs/Trellix.pdf">Download the Trellix TLS Analysis paper</a>.</p>
-	<p>If your browser blocks inline PDF viewing, try opening the link directly.</p>
-</object>
+<p>
+	<a href="/assets/pdfs/Trellix.pdf" class="btn" target="_blank" rel="noopener">View PDF</a>
+</p>

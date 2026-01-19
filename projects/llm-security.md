@@ -22,7 +22,6 @@ Developed an LLM-driven framework and XML-based reference monitor to limit promp
 
 ## Paper
 
-<object data="/assets/pdfs/LLMSecurityFramework.pdf#view=FitH" type="application/pdf" width="100%" height="800">
-	<p>Can’t display the PDF here. <a href="/assets/pdfs/LLMSecurityFramework.pdf">Download the LLM Security Framework paper</a>.</p>
-	<p>If your browser blocks inline PDF viewing, try opening the link directly.</p>
-</object>
+<p>
+	<a href="/assets/pdfs/LLMSecurityFramework.pdf" class="btn" target="_blank" rel="noopener">View PDF</a>
+</p>
