@@ -23,8 +23,10 @@ Implemented Lucas-Kanade optical flow based collision detection and GPIO driver 
 
 ## Sources
 
-https://github.com/aasch2020/Optibrake
+
 
 <p>
 	<a href="/assets/pdfs/Bike-brake.pdf" class="btn" target="_blank" rel="noopener">View PDF</a>
 </p>
+
+[aasch2020/Optibrake](https://github.com/aasch2020/Optibrake)
