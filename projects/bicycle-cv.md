@@ -2,6 +2,11 @@
 
 **December 2025** | University of California San Diego
 
+<div class="card-image-box">
+	<img src="/assets/img/projects/bike-brake-title.jpg" alt="Bicycle Braking" class="card-image" loading="lazy" decoding="async" />
+{%- comment -%} image before Overview {%- endcomment -%}
+</div>
+
 ## Overview
 
 Implemented Lucas-Kanade optical flow based collision detection and GPIO driver for closed-loop braking control.
