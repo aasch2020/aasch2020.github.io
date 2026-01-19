@@ -22,4 +22,4 @@ Built a web app integrating the iNaturalist API, Py4Web backend, and Google Maps
 
 ## Repository
 
-[BloomBase183/BloomBase](https://github.com/BloomBase183/BloomBase)
+<div>[BloomBase183/BloomBase](https://github.com/BloomBase183/BloomBase)</div>
