@@ -2,11 +2,6 @@
 
 **June 2025** | University of California San Diego
 
-<div class="card-image-box">
-	<img src="/assets/img/projects/trellix-tls.svg" alt="Trellix TLS Analysis" class="card-image" loading="lazy" decoding="async" />
-{%- comment -%} image before Overview {%- endcomment -%}
-</div>
-
 ## Overview
 
 Utilized bpftrace to capture unencrypted TLS traffic for Trellix security monitoring platform; analyzed captured traffic.

@@ -2,11 +2,6 @@
 
 **September 2025** | University of California San Diego
 
-<div class="card-image-box">
-	<img src="/assets/img/projects/LLMSecurity.png" alt="LLM Security Framework" class="card-image" loading="lazy" decoding="async" />
-{%- comment -%} image before Overview {%- endcomment -%}
-</div>
-
 ## Overview
 
 Developed an LLM-driven framework and XML-based reference monitor to limit prompt injection attacks.

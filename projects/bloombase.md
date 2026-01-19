@@ -2,11 +2,6 @@
 
 **Mar 2023 — June 2023** | University of California Santa Cruz
 
-<div class="card-image-box">
-	<img src="/assets/img/projects/Bloombase.png" alt="Bloombase" class="card-image" loading="lazy" decoding="async" />
-{%- comment -%} image before Overview {%- endcomment -%}
-</div>
-
 ## Overview
 
 Built a web app integrating the iNaturalist API, Py4Web backend, and Google Maps front-end.

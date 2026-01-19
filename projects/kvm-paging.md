@@ -2,11 +2,6 @@
 
 **June 2025** | University of California San Diego
 
-<div class="card-image-box">
-	<img src="/assets/img/projects/kvm.png" alt="KVM Page Eviction" class="card-image" loading="lazy" decoding="async" />
-{%- comment -%} image before Overview {%- endcomment -%}
-</div>
-
 ## Overview
 
 Worked on shadow page table implementation to optimize paging policy; evaluated with stress-ng and redis-benchmark.
