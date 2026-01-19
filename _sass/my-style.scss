@@ -12,3 +12,10 @@
     margin: 1rem 0;
   }
 }
+
+/* Crop sidebar logo image to a square without affecting favicon */
+#_sidebar img[src*="/assets/img/headshot.jpg"] {
+  width: 128px;
+  height: 128px;
+  object-fit: cover;
+}
