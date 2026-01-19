@@ -19,6 +19,4 @@ Utilized bpftrace to capture unencrypted TLS traffic for Trellix security monito
 
 ## Paper
 
-<p>
-	<a href="/assets/pdfs/Trellix.pdf" class="btn" target="_blank" rel="noopener">View PDF</a>
-</p>
+{% include pdf-modal.html file="/assets/pdfs/Trellix.pdf" label="View PDF" %}

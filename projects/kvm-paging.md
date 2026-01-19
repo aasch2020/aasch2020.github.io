@@ -21,6 +21,4 @@ Worked on shadow page table implementation to optimize paging policy; evaluated 
 
 ## Paper
 
-<p>
-	<a href="/assets/pdfs/KVM.pdf" class="btn" target="_blank" rel="noopener">View PDF</a>
-</p>
+{% include pdf-modal.html file="/assets/pdfs/KVM.pdf" label="View PDF" %}

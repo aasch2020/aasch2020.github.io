@@ -1,0 +1,47 @@
+{% comment %}
+Reusable PDF modal include.
+Usage: {% include pdf-modal.html file="/assets/pdfs/KVM.pdf" label="View PDF" %}
+{% endcomment %}
+{% assign pdf_file = include.file %}
+{% assign pdf_label = include.label | default: "View PDF" %}
+{% assign pdf_id = pdf_file | replace: "/", "-" | replace: ".", "-" %}
+
+<p>
+  <button id="view-pdf-{{ pdf_id }}" class="btn">{{ pdf_label }}</button>
+</p>
+
+<div id="pdf-modal-{{ pdf_id }}" class="pdf-modal" aria-hidden="true" role="dialog" aria-modal="true">
+  <div class="pdf-modal-content">
+    <button class="pdf-modal-close btn" aria-label="Close">Close</button>
+    <object data="{{ pdf_file }}#view=FitH" type="application/pdf" width="100%" height="100%">
+      <p>Can't display the PDF here. <a href="{{ pdf_file }}" target="_blank" rel="noopener">Open the PDF</a>.</p>
+    </object>
+  </div>
+</div>
+
+<script>
+(function() {
+  const btn = document.getElementById('view-pdf-{{ pdf_id }}');
+  const modal = document.getElementById('pdf-modal-{{ pdf_id }}');
+  const closeBtn = modal.querySelector('.pdf-modal-close');
+  if (!btn || !modal || !closeBtn) return;
+
+  btn.addEventListener('click', function() {
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+  });
+
+  closeBtn.addEventListener('click', function(e) {
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+  });
+
+  // Close when clicking backdrop
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) {
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+  });
+})();
+</script>

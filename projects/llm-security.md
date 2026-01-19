@@ -22,6 +22,4 @@ Developed an LLM-driven framework and XML-based reference monitor to limit promp
 
 ## Paper
 
-<p>
-	<a href="/assets/pdfs/LLMSecurityFramework.pdf" class="btn" target="_blank" rel="noopener">View PDF</a>
-</p>
+{% include pdf-modal.html file="/assets/pdfs/LLMSecurityFramework.pdf" label="View PDF" %}
