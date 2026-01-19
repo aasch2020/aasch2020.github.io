@@ -19,3 +19,12 @@ Implemented Lucas-Kanade optical flow based collision detection and GPIO driver 
 - Developed real-time collision detection using optical flow analysis
 - Implemented closed-loop control system for automated braking
 - Integrated computer vision with hardware GPIO drivers
+
+
+## Sources
+
+https://github.com/aasch2020/Optibrake
+
+<p>
+	<a href="/assets/pdfs/Bike-brake.pdf" class="btn" target="_blank" rel="noopener">View PDF</a>
+</p>
