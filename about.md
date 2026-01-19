@@ -22,7 +22,6 @@ Software Engineer & M.S. student at UC San Diego with experience in application 
 - GitHub: [aasch2020](https://github.com/aasch2020)  
 - LinkedIn: [alex-asch](https://www.linkedin.com/in/alex-asch-755270219/)
 
-Use the navigation to view my [Experience](/experience/), [Education](/education/), and [Projects](/projects/).
 
 
 ## Focus Areas
