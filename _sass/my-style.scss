@@ -29,17 +29,28 @@
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
 }
 
-/* Card image */
+.card-image-box {
+  display: block;
+  width: 100%;
+  height: 160px; /* fixed box height */
+  border-radius: 0.4rem;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Card image fills the box */
 .card-image {
   display: block;
   width: 100%;
-  max-width: 100%;
-  height: 160px;
+  height: 100%;
   object-fit: cover;
-  border-radius: 0.4rem;
-  margin-bottom: 0.75rem;
+  transition: transform 0.2s ease;
 }
 
+.grid-card:hover .card-image {
+  transform: scale(1.01);
+}
 /* Inner two-column layout */
 .card-two-col {
   display: grid;
