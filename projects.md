@@ -2,11 +2,13 @@
 
 <div class="three-col-grid">
   <a href="/projects/trellix-tls" class="grid-card">
-    <img
-      src="/assets/img/projects/trellix-tls.svg"
-      alt="Trellix TLS Analysis"
-      class="card-image"
-    />
+    <div class="card-image-box">
+      <img
+        src="/assets/img/projects/trellix-tls.svg"
+        alt="Trellix TLS Analysis"
+        class="card-image"
+      />
+    </div>
 
     <h3>Trellix TLS Analysis</h3>
 
@@ -23,11 +25,13 @@
   </a>
 
   <a href="/projects/kvm-paging" class="grid-card">
-    <img
-      src="/assets/img/projects/kvm.png"
-      alt="KVM Page Eviction"
-      class="card-image"
-    />
+    <div class="card-image-box">
+      <img
+        src="/assets/img/projects/kvm.png"
+        alt="KVM Page Eviction"
+        class="card-image"
+      />
+    </div>
 
     <h3>KVM Page Eviction</h3>
 
@@ -44,11 +48,13 @@
   </a>
 
   <a href="/projects/bicycle-cv" class="grid-card">
-    <img
-      src="/assets/img/projects/bicycle-cv.svg"
-      alt="Bicycle Braking"
-      class="card-image"
-    />
+    <div class="card-image-box">
+      <img
+        src="/assets/img/projects/bicycle-cv.svg"
+        alt="Bicycle Braking"
+        class="card-image"
+      />
+    </div>
 
     <h3>Bicycle Braking</h3>
 
@@ -65,11 +71,13 @@
   </a>
 
   <a href="/projects/bloombase" class="grid-card">
-    <img
-      src="/assets/img/projects/Bloombase.png"
-      alt="Bloombase"
-      class="card-image"
-    />
+    <div class="card-image-box">
+      <img
+        src="/assets/img/projects/Bloombase.png"
+        alt="Bloombase"
+        class="card-image"
+      />
+    </div>
 
     <h3>Bloombase</h3>
 
@@ -86,11 +94,13 @@
   </a>
 
   <a href="/projects/llm-security" class="grid-card">
-    <img
-      src="/assets/img/projects/LLMSecurity.png"
-      alt="LLM Security Framework"
-      class="card-image"
-    />
+    <div class="card-image-box">
+      <img
+        src="/assets/img/projects/LLMSecurity.png"
+        alt="LLM Security Framework"
+        class="card-image"
+      />
+    </div>
 
     <h3>LLM Security Framework</h3>
 
