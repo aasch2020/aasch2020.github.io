@@ -18,3 +18,10 @@ Worked on shadow page table implementation to optimize paging policy; evaluated 
 - Implemented approximate LRU paging policy to replace FIFO
 - Optimized shadow page table handling in KVM
 - Conducted comprehensive performance evaluation with industry-standard benchmarks
+
+## Paper
+
+<object data="/assets/pdfs/KVM.pdf#view=FitH" type="application/pdf" width="100%" height="800">
+	<p>Can’t display the PDF here. <a href="/assets/pdfs/KVM.pdf">Download the KVM paper</a>.</p>
+	<p>If your browser blocks inline PDF viewing, try opening the link directly.</p>
+</object>

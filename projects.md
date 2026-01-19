@@ -66,7 +66,7 @@
 
   <a href="/projects/bloombase" class="grid-card">
     <img
-      src="/assets/img/projects/bloombase.svg"
+      src="/assets/img/projects/Bloombase.png"
       alt="Bloombase"
       class="card-image"
     />
