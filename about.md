@@ -29,9 +29,9 @@ Software Engineer & M.S. student at UC San Diego with experience in application 
 <!--posts-->
 
 
-## Selected Projects
+## Projects
 
-<!--projects-->
+[Projects](/projects/)
 
 
 ## Resume
