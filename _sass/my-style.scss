@@ -72,3 +72,25 @@
   height: 128px;
   object-fit: cover;
 }
+
+/* Hide ghosted '#' permalink anchors on headings */
+h1 > a.heading-link,
+h2 > a.heading-link,
+h3 > a.heading-link,
+h4 > a.heading-link,
+h5 > a.heading-link,
+h6 > a.heading-link,
+h1 > a.headerlink,
+h2 > a.headerlink,
+h3 > a.headerlink,
+h4 > a.headerlink,
+h5 > a.headerlink,
+h6 > a.headerlink,
+h1 > a[href^="#"],
+h2 > a[href^="#"],
+h3 > a[href^="#"],
+h4 > a[href^="#"],
+h5 > a[href^="#"],
+h6 > a[href^="#"] {
+  display: none;
+}
