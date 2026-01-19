@@ -25,5 +25,4 @@ Worked on shadow page table implementation to optimize paging policy; evaluated 
 	<a href="/assets/pdfs/KVM.pdf" class="btn" target="_blank" rel="noopener">View PDF</a>
 </div>
 
-
 [aaron-ang/kvm](https://github.com/aaron-ang/kvm)
