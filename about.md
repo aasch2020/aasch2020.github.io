@@ -31,7 +31,7 @@ Software Engineer & M.S. student at UC San Diego with experience in application 
 
 ## Projects
 
-[Projects](/projects/)
+Find my projects and retrospectives [here](/projects/)!
 
 
 ## Resume
