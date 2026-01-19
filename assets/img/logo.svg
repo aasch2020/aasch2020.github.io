@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <style>
+      .aa-logo {
+        fill: none;
+        stroke: #ffffff;
+        stroke-width: 16;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+    </style>
+  </defs>
+  
+  <!-- Midnight purple background -->
+  <rect width="200" height="200" fill="#3d2463"/>
+  
+  <!-- Connected AA monogram -->
+  <g class="aa-logo">
+    <!-- Single A -->
+    <path d="M 60 160 L 100 40 L 140 160" stroke="#ffffff" fill="none" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Horizontal bar -->
+    <line x1="75" y1="110" x2="125" y2="110" stroke="#ffffff" stroke-width="14" stroke-linecap="round"/>
+  </g>
+</svg>

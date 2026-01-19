@@ -1,13 +1,3 @@
-layout: about
-image: /assets/img/blog/hydejack-9.jpg
-description: >
-  Software Engineer & M.S. student focused on application security,
-  systems, and full‑stack development.
-hide_description: true
-redirect_from:
-  - /download/
----
-
 # About
 
 <!--author-->
@@ -46,7 +36,7 @@ Software Engineer & M.S. student at UC San Diego with experience in application 
 
 ## Resume
 
-If you need a PDF resume, contact me via email and I’ll send the latest copy.
+pdf link
 
 
 ## Skills Snapshot
@@ -56,5 +46,5 @@ Python, C/C++, Java, Go, JavaScript/TypeScript, React, Angular, Docker, GDB, Bur
 
 ## Contact
 
-For opportunities or questions, email me at a.asch2020@gmail.com.
+link
 

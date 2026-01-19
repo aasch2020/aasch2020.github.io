@@ -1,0 +1,21 @@
+# Computer Vision Driven Automated Bicycle Braking
+
+**December 2025** | University of California San Diego
+
+## Overview
+
+Implemented Lucas-Kanade optical flow based collision detection and GPIO driver for closed-loop braking control.
+
+## Technologies
+
+- Computer vision (OpenCV)
+- Lucas-Kanade optical flow
+- GPIO/hardware control
+- Real-time embedded systems
+- Python
+
+## Key Accomplishments
+
+- Developed real-time collision detection using optical flow analysis
+- Implemented closed-loop control system for automated braking
+- Integrated computer vision with hardware GPIO drivers

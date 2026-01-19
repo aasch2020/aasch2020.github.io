@@ -1,15 +1,68 @@
-.dl-table {
-  a {
-    @supports ((text-decoration-thickness: initial) and (text-underline-offset: initial)) {
-      text-underline-offset: .8rem;
-    }
-    @supports not ((text-decoration-thickness: initial) and (text-underline-offset: initial)) {
-      padding-bottom: .45rem;
-    }
-  }
+/* Outer grid */
+.three-col-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.75rem;
+  margin: 2rem 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
 
-  .btn, .gumroad-button  {
-    margin: 1rem 0;
+/* Card */
+.grid-card {
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+  background: var(--body-bg, #fff);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  text-decoration: none;
+  color: inherit;
+}
+
+.grid-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+}
+
+/* Card image */
+.card-image {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Inner two-column layout */
+.card-two-col {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  min-width: 0;
+}
+
+.card-two-col > * {
+  min-width: 0;
+}
+
+/* Meta column */
+.card-meta {
+  font-size: 0.9rem;
+  color: var(--text-muted, #666);
+}
+
+/* Mobile stacking */
+@media (max-width: 600px) {
+  .card-two-col {
+    grid-template-columns: 1fr;
   }
 }
 

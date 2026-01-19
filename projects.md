@@ -1,36 +1,110 @@
-layout: page
-title: Projects
----
-
 # Projects
 
-## Trellix Software TLS Analysis — University of California San Diego
-**June 2025**
+<div class="three-col-grid">
+  <a href="/projects/trellix-tls" class="grid-card">
+    <img
+      src="/assets/img/projects/trellix-tls.svg"
+      alt="Trellix TLS Analysis"
+      class="card-image"
+    />
 
-- Utilized bpftrace to capture unencrypted TLS traffic for Trellix security monitoring platform; analyzed captured traffic.
+    <h3>Trellix TLS Analysis</h3>
 
-## Enhancing KVM Page Eviction: From FIFO to Approximate LRU — University of California San Diego
-**June 2025**
+    <div class="card-two-col">
+      <div>
+        <p>Utilized bpftrace to capture unencrypted TLS traffic for Trellix security monitoring platform; analyzed captured traffic.</p>
+      </div>
 
-- Worked on shadow page table implementation to optimize paging policy; evaluated with stress-ng and redis-benchmark.
+      <div class="card-meta">
+        <p><strong>Tech:</strong> bpftrace, TLS</p>
+        <p><strong>Date:</strong> June 2025</p>
+      </div>
+    </div>
+  </a>
 
-## Computer Vision Driven Automated Bicycle Braking — University of California San Diego
-**December 2025**
+  <a href="/projects/kvm-paging" class="grid-card">
+    <img
+      src="/assets/img/projects/kvm-paging.svg"
+      alt="KVM Page Eviction"
+      class="card-image"
+    />
 
-- Implemented Lucas-Kanade optical flow based collision detection and GPIO driver for closed-loop braking control.
+    <h3>KVM Page Eviction</h3>
 
-## LLM Based Security Framework for Chatbot Agents — University of California San Diego
-**September 2025**
+    <div class="card-two-col">
+      <div>
+        <p>Implemented approximate LRU paging policy to optimize KVM shadow page tables; evaluated with stress-ng and redis-benchmark.</p>
+      </div>
 
-- Developed an LLM-driven framework and XML-based reference monitor to limit prompt injection attacks.
+      <div class="card-meta">
+        <p><strong>Tech:</strong> KVM, C</p>
+        <p><strong>Date:</strong> June 2025</p>
+      </div>
+    </div>
+  </a>
 
-## Slugquest Project — University of California Santa Cruz
-**Jan 2024 — Mar 2024**
+  <a href="/projects/bicycle-cv" class="grid-card">
+    <img
+      src="/assets/img/projects/bicycle-cv.svg"
+      alt="Bicycle Braking"
+      class="card-image"
+    />
 
-- Built collaborative web app; implemented Golang backend (Gin) and SQLite.
+    <h3>Bicycle Braking</h3>
 
-## Bloombase Project — University of California Santa Cruz
-**Mar 2023 — June 2023**
+    <div class="card-two-col">
+      <div>
+        <p>Developed real-time collision detection using Lucas-Kanade optical flow and integrated GPIO driver for closed-loop braking control.</p>
+      </div>
 
-- Built a web app integrating the iNaturalist API, Py4Web backend, and Google Maps front-end.
-- Repository: https://github.com/BloomBase183/BloomBase
+      <div class="card-meta">
+        <p><strong>Tech:</strong> OpenCV, Python</p>
+        <p><strong>Date:</strong> December 2025</p>
+      </div>
+    </div>
+  </a>
+
+  <a href="/projects/bloombase" class="grid-card">
+    <img
+      src="/assets/img/projects/bloombase.svg"
+      alt="Bloombase"
+      class="card-image"
+    />
+
+    <h3>Bloombase</h3>
+
+    <div class="card-two-col">
+      <div>
+        <p>Built web app integrating iNaturalist API with Py4Web backend and Google Maps frontend for biodiversity mapping and visualization.</p>
+      </div>
+
+      <div class="card-meta">
+        <p><strong>Tech:</strong> Py4Web, APIs</p>
+        <p><strong>Date:</strong> Mar–June 2023</p>
+      </div>
+    </div>
+  </a>
+
+  <a href="/projects/llm-security" class="grid-card">
+    <img
+      src="/assets/img/projects/llm-security.svg"
+      alt="LLM Security Framework"
+      class="card-image"
+    />
+
+    <h3>LLM Security Framework</h3>
+
+    <div class="card-two-col">
+      <div>
+        <p>Developed LLM-driven framework with XML-based reference monitor to mitigate prompt injection attacks in chatbot agents.</p>
+      </div>
+
+      <div class="card-meta">
+        <p><strong>Tech:</strong> LLMs, Security</p>
+        <p><strong>Date:</strong> September 2025</p>
+      </div>
+    </div>
+  </a>
+</div>
+
+<script src="/assets/js/projects.js"></script>
