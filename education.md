@@ -7,13 +7,13 @@ Relevant coursework: Graduate Computer Security, Algorithm Design and Analysis, 
 
 
 ### Coursework Highlights and Skills
-#### CUDA Matrix Multiplication Optimization
+#### **CUDA Matrix Multiplication Optimization**
 
 - Implemented high-performance GPU matrix multiplication with tiling, shared memory, coalesced accesses, and ILP.
 - Achieved up to 3.27 TFLOPS, 25x speedup over naive implementation, and competitive performance with cuBLAS.
 - Performed roofline analysis and tuned for edge cases (non-multiples of tile/warp sizes).
 
-### 2D Wave Simulation using MPI
+#### **2D Wave Simulation using MPI**
 
 - Parallelized a 2D wave equation solver using MPI with a 5-point stencil.
 - Implemented ghost-cell communication for arbitrary 1D and 2D processor geometries.
@@ -27,7 +27,7 @@ Relevant coursework: Graduate Computer Security, Algorithm Design and Analysis, 
 Graduated Cum Laude (top ~15% of graduating class by GPA).
 
 ### Coursework Highlights and Skills
-#### Operating System Kernel Project (PintOS)
+#### **Operating System Kernel Project (PintOS)**
 
 - Implemented kernel subsystems including process management, system calls, and synchronization primitives in C.
 - Built virtual memory system with lazy loading, swap management, and clock page replacement.
@@ -35,7 +35,7 @@ Graduated Cum Laude (top ~15% of graduating class by GPA).
 - Developed user–kernel memory safety checks and page fault handling.
 
 
-#### Distributed Key-Value Store with Causal Consistency (Python)
+#### **Distributed Key-Value Store with Causal Consistency (Python)**
 
 - Designed and implemented a replicated key-value store with causal consistency using vector clocks.
 
