@@ -77,5 +77,6 @@
 
 - Worked with Docker and QA tooling to validate web product functionality.
 - Gained experience with usage of the centric PLM product, and domain 
+
 ### Tech and Skills
 - Docker, Jira, Light Python automation and scripting
