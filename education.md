@@ -38,14 +38,9 @@ Graduated Cum Laude (top ~15% of graduating class by GPA).
 #### **Distributed Key-Value Store with Causal Consistency (Python)**
 
 - Designed and implemented a replicated key-value store with causal consistency using vector clocks.
-
 - Implemented replication and broadcast mechanisms using multithreaded worker queues.
-
 - Built failure detection and view management through HTTP-based replica health monitoring.
-
 - Implemented causal dependency tracking with vector clocks and deferred request processing.
-
 - Developed concurrent request handling using Python threading and worker pools.
-
 - Containerized distributed system using Docker.
 
