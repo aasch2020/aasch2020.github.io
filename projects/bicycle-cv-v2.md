@@ -1,6 +1,4 @@
-# Computer Vision Driven Automated Bicycle Braking
-
-**December 2025** | University of California San Diego
+# OptiBrake (Bicycle CV Braking) — Project Copy (v2)
 
 ## Summary
 
@@ -33,10 +31,6 @@ I worked on wheel odometry, closed-loop brake control, and hardware integration.
 - **Optical flow detection** — Lucas-Kanade for any-obstacle proximity; FoE and TTC with odometry for distance.  
 - **Indoor validation** — Showed automated brake actuation from single-camera CV on a Pi in controlled trials; documented false-positive and environment limits.
 
-## Sources
+---
 
-<p>
-	<a href="/assets/pdfs/Bike-brake.pdf" class="btn" target="_blank" rel="noopener">View PDF</a>
-</p>
-
-[aasch2020/Optibrake](https://github.com/aasch2020/Optibrake)
+*V2 project copy. Original: [bicycle-cv.md](bicycle-cv.md). [View PDF](/assets/pdfs/Bike-brake.pdf) · [aasch2020/Optibrake](https://github.com/aasch2020/Optibrake)*

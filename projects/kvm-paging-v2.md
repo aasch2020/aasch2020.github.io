@@ -1,6 +1,4 @@
-# Enhancing KVM Page Eviction: From FIFO to Approximate LRU
-
-**June 2025** | University of California San Diego
+# KVM Page Eviction (FIFO → Approximate LRU) — Project Copy (v2)
 
 ## Summary
 
@@ -33,8 +31,6 @@ I collaboratively modified KVM MMU code (`mmu.c`, `mmu_zap_oldest_pages()`) to u
 - **Measured gains** — stress-ng: fewer page faults, redis-benchmark: lower latency under load with Approx. LRU; flamegraphs showed fewer samples in key page-fault paths.  
 - **Scope** — Changes are in the shadow MMU path only; TDP MMU unchanged.
 
-<div>
-	<a href="/assets/pdfs/KVM.pdf" class="btn" target="_blank" rel="noopener">View PDF</a>
-</div>
+---
 
-[aaron-ang/kvm](https://github.com/aaron-ang/kvm)
+*V2 project copy. Original: [kvm-paging.md](kvm-paging.md). [View PDF](/assets/pdfs/KVM.pdf) · [aaron-ang/kvm](https://github.com/aaron-ang/kvm)*

@@ -1,10 +1,8 @@
-# LLM Based Security Framework for Chatbot Agents
-
-**September 2025** | University of California San Diego
+# AccessControl Agent (LLM Security) — Project Copy (v2)
 
 ## Summary
 
-**AccessControl Agent** reduces prompt-injection risk for tool-using agents. A separate LLM predicts which tools the user’s prompt needs and outputs an XML policy; a reference monitor enforces it so the agent may only call approved tools in that order.
+**AccessControl Agent (BlueMoon)** reduces prompt-injection risk for tool-using agents. A separate LLM predicts which tools the user’s prompt needs and outputs an XML policy; a reference monitor enforces it so the agent may only call approved tools in that order.
 
 ## Motivation
 
@@ -32,10 +30,6 @@ I created the reference monitor and integrated it with the AI agent; I wrote the
 - **XML state tree** — Nodes (function + args), Blocks, Conditionals; monitor allows at most one next node (or two at conditionals) per step.  
 - **Injection mitigation** — Monitor caught many injections (e.g., 7/8 Llama, 3/13 GPT 4o); GPT 4o’s agent also resisted 10/13 on its own.  
 
-## Sources
+---
 
-<p>
-	<a href="/assets/pdfs/LLMSecurityFramework.pdf" class="btn" target="_blank" rel="noopener">View PDF</a>
-</p>
-
-[amysmunson/LLM_Experiments](https://github.com/amysmunson/LLM_Experiments)
+*V2 project copy. Original: [llm-security.md](llm-security.md). [View PDF](/assets/pdfs/LLMSecurityFramework.pdf) · [amysmunson/LLM_Experiments](https://github.com/amysmunson/LLM_Experiments)*

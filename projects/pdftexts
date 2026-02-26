@@ -1,0 +1,3835 @@
+TLS and TOS Analysis of Trellix Real Time Monitoring
+Alex Asch
+UC San Diego
+Delaware Wade
+UC San Diego
+Longtian Bao
+UC San Diego
+Abstract
+The usage of real-time monitoring agents such as Trellix HX
+raises important questions regarding privacy practices in data
+handling and retrieval, monitoring scope, and the implications
+of closed-source software operating with root privileges on
+user machines. In the worst case, these solutions can serve as
+another threat vector on a given device, since their programs
+run with root privilege, and are networked. We sought to first
+compare and evaluate privacy terms and protections between
+two comparable solutions, Trellix HX and Norton 360, to
+ascertain the extent of user data usage, as well as assumed
+liability on behalf of the product, and the user. Additionally,
+we performed a network analysis of several components of the
+software, in order to ascertain what client device data is being
+collected, as well as potential vectors for exploitation. We
+conclude that a large amount of private user data is being sent
+to Trellix and Qualys servers through this active monitoring
+tool.
+1 Introduction
+With the Trellix HX real time monitoring software suite being
+endorsed, and possibly mandated by UCSD for all faculty
+devices, it is important to understand the privacy implica-
+tions of the data collected by these products and the user data
+protections and agreements given to its users.
+To identify the user data that is collected, and to analyze
+the legal protections given to users in regards to this data,
+we perform two analyses. First, we compare the TOS of the
+Trellix software suite to a comparable solution, to break down
+specific guarantees and terms in the TOS in context of end-
+point management software. Additionally, we aim to trace
+and analyze data sent over the network by the Trellix software
+suite of products, to determine the extent of user data being
+collected.
+Our primary comparison contrasts Norton 360, a popular
+consumer security software, with the Trellix software cur-
+rently deployed at our institution across four key features. We
+found that Trellix employs a significantly more aggressive
+and detailed approach regarding software limitations and user
+rights compared to Norton’s more open-ended terms.
+To obtain the user data sent, we utilize a bpftrace-centric
+approach, which allows us to bypass the transport layer secu-
+rity (TLS) used by the Trellix software components in their
+communication to the server. By combining long-term runs
+of the software suite on virtual machines with this tracing, we
+were able to ascertain the scope of user data being exfiltrated,
+and discovered comprehensive scanning of processes, files
+and kernel configuration data. Considering that the Trellix
+software suite runs at root level, we believe that these findings
+highlight a serious privacy implication for end users at UCSD.
+2 Trellix TOS comparison
+2.1 Perpetual Data Rights vs. Term-Limited
+Licensing
+Table 1 compares the Trellix software we are analyzing with
+Norton 360, a popular security software. The first notable
+difference is how they treat user data. Trellix’s EULA grants
+the company a "non-exclusive, irrevocable, worldwide, per-
+petual right and license to use, reproduce and disclose Threat
+Data for our business purposes." [1] In contrast, Norton’s Li-
+cense and Services Agreement states that for user-provided
+"Submissions," the company is granted "permission to use,
+reproduce, copy and translate your Submission on a world-
+wide basis, for the term of protection of the Submissions by
+IP rights." [2] Trellix’s statement is much more aggressive
+giving the platform both perpetual and irrevocable license
+to use and disclose "threat data". By contrasting the terms
+"Threat Data" and "submission", while both categories are
+open to interpretation of the company, "submission" seems to
+more closely refer to data submitted by the user, as opposed
+to "Threat Data" which can encompass a larger scope.
+Table 1: Comparison of key terms and conditions between Trellix and Norton 360 software agreements
+Feature Trellix Norton 360
+Rights to Your Data Claims a perpetual and irrevocable right to use
+customer "Threat Data" for its business purposes
+[1].
+Is granted a license to use customer submissions
+for the duration of the a limited time [2].
+Compliance & Fees Reserves the right to audit software usage and
+charge specific "out-of-compliance fees" if li-
+censing is inadequate [1].
+The consumer agreement does not contain a com-
+parable clause for non-compliance [2].
+Termination Rights Reserves the right to terminate specific software
+features at any time, stating, "Upon the End-of-
+Life date of a... feature... Your right to use... the
+Software feature shall terminate" [1].
+Reserves the right to terminate a user’s access
+at any time and for any reason, with or without
+cause [2].
+2.2 Assumption vs. Disclaimer of Infringement
+Liability
+Trellix reserves the right to enforce compliance by stating: "If
+the systems report or Your prepared Software deployment ver-
+ification report indicates that You are out of compliance with
+the license terms of Your Grant Letter and this Agreement,
+You agree to purchase the additional licenses and pay Us the
+applicable reinstatement fees associated with the licenses and
+Support." This means that users must purchase additional li-
+censes and pay out-of-compliance fees when non-compliance
+is detected. Trellix provides detailed statements regarding
+compliance requirements and associated fees, whereas Nor-
+ton does not. This difference may also be related to the com-
+mon use cases of Trellix vs Norton, with Trellix being a more
+enterprise focused solution.
+2.3 Termination Rights
+Both Norton and Trellix imply termination of services or fea-
+tures for any reason for paying users. Trellix states "Upon
+the End-of-Life date of a... feature... Your right to use... the
+Software feature shall terminate". This means that if a feature
+is marked End-of-Life, Trellix may immediately drop support
+of the feature, without any regards to notification or compen-
+sation. In contrast to this, Norton has a clause in which they
+can terminate a user’s access at any time without cause. Thus,
+while the Trellix TOS termination right may seem extreme,
+this type of practice is commonplace in endpoint security
+solutions.
+3 Trellix TLS analysis
+3.1 Obtaining TLS traffic
+The Trellix installer bundles two individual pieces of software:
+xAgent and Qualys Cloud Agent. Our first task was to
+capture the unencrypted TLS traffic these programs send over
+the network. We utilized Ubuntu/Debian Virtual Machines
+to install the software and begin testing. Initial scans
+using wireshark revealed DNS queries for two hostnames:
+hexmfv994-hx-agent-1.hex01.helix.apps.fireeye.com
+and qagpublic.qg1.apps.qualys.com. We attempted to
+use standard proxy tools such as mitmproxy to intercept
+traffic, however, due to TLS pinning, we were only able
+to obtain unencrypted TCP keep-alive packets from this
+method. A possible next step could be to attempt to find
+logged pre-master secret keys and use them to decrypt
+captured traffic, but a more straightforward approach is
+to intercept the unencrypted data as it passes to shared
+library functions. From here, we tried ltrace and strace to
+capture system call traffic from the software. These yielded
+no useful results, and usage of ldd to view the dynamic
+dependencies of xagt and qualys-cloud-agent confirmed
+that custom libssl.so and libcrypto.so were being used.
+This is most likely to ensure FIPS compliance [3]. Since
+the system libraries for libssl and libcrypto were not
+being accessed, neither of the above yielded useful results.
+In the end, we used bpftrace scripts to trace the calls into
+the scripts’ custom libssl libraries to obtain a long-term
+traffic log. From our initial log for qualys, we found lzma
+encoded content that we were unable to decompress using
+solely the data from our TLS dump. To overcome this, we
+traced the calls to liblzma using bpftrace as well to obtain
+the raw data. The final hurdle we overcame was accessing
+the memory stored at pointer locations bpftrace returned
+from function arguments. We piped the outputs to a custom
+python script that scraped the data at each memory address
+into a file. Due to the program operating concurrently on the
+same locations, some data was altered or corrupted due to
+race conditions, but the majority of the unencrypted packet
+data was recovered successfully.
+3.2 Metadata, Endpoints, Certs
+By analyzing the arguments passed to the custom
+libssl.so library, we were able to uncover all data
+sent over the network by xagt and qualys-cloud-agent.
+For the xagt endpoint, we found a certificate revoca-
+tion list (1) for the sfServer.hexmfv994-hx-agent-1.
+2
+Table 2: List of Trellix xAgent Endpoints and Descriptions. All subdomains from xagt TLS traffic are for the hostname
+hexmfv994-hx-agent-1.hex01.helix.apps.fireeye.com
+Subdomain Endpoint Description
+sfServer POST /poll The most commonly called endpoint. It is polled every 10
+minutes, where the client sends a version number(1.0), a
+status code, versioning info, and date/time. The server then
+responds with the version id again, current time, cluster id, re-
+polling timing info, a crl and nonce, and a task struct. Most
+times this task list is empty, but there were some runs in
+which we were able to see tasks exchanged. For the entire
+duration, there is an x-cid header attached, which remains a
+constant value.
+sfServer GET /content/v1/config/config_id/default Likely polls for a default client configuration, approximately
+every 30 minutes. We were unable to get more than a 304
+from this endpoint. The configuration ID remained the same
+for the entire duration of the run
+sfPKI GET /pki/crl/distro Get a Certificate Revocation List. Only managed to capture
+a 304 response in our run.
+sfPKI GET /pki/crl/comms Get a Certificate Revocation List. Only managed to capture
+a 304 response in our run.
+sfPKI GET /content/v1/intel/ioc/linux-xagent_linux Retrieves indicators of compromise for the current user de-
+vice (intel, linux). We captured a response for this, however
+the content-type was application/vnd.fireeye.hx.payload.v1,
+and we were unable to retrieve further information from this.
+sfPKI GET /content/v1/intel/mal/exclusions Retrieves what is assumed to be the scan exclusion list for
+xagt. We were able to retrieve a large supposedly x-gzip en-
+coded body, but were unable to decompress it with standard
+decompression or forensics tools. The documentation [4]
+supports the idea of a centrally managed fetched exclusion
+list. Additionally, the content-type was a proprietary applica-
+tion/vnd.fireeye.hx.payload.v1 type, and we were unable to
+retrieve further information from this.
+sfPKI GET /content/v1/intel/mal/hx_exclusions Retrieves what is assumed to be the scan exclusion list for
+xagt. We were able to retrieve a large supposedly x-gzip
+encoded body, but were unable to decompress it with standard
+decompression or forensics tools. The documentation [4]
+supports the idea of retrieving an exclusion list from the
+remote provider. Additionally, content-type was a proprietary
+application/vnd.fireeye.hx.payload.v1, and we were unable
+to retrieve further information from this.
+agentMSG POST /msg/v1/lo Frequently polled endpoint, where the local Trellix install
+sends system health information, including the hostname,
+health status, and a frequently empty timestamp. Usually
+we get an empty response for the server, except for in one
+instance we got an x509 CRL, which is included in the be-
+ginning of the traffic analysis.
+3
+Table 3: List of Qualys Cloud Agent Endpoints and Descriptions. The Hostname for all endpoints found in qualys-cloud-agent
+TLS traffic is qagpublic.qg1.apps.qualys.com
+Endpoint Description
+POST /Qlys/CloudAgent/status This endpoint is contacted roughly every hour, with the fol-
+lowing non-standard headers. X-QLYS-Authorization, with
+an auth type QHmacV2Auth, then <client_ID> and a colon
+and what seems to be an authentication key, Q-PROTOVER
+with a version number 1.0, X-Correlation-Id with a unique
+bytestring, Q-PROTOCLNTPLATFORM with the client plat-
+form, Q-PROTOTYPE with type SCAN, Q-CUSTID with
+the customer ID, X-QLYS-Timestamp, which is a date-time
+field, Q-PROTOCLNTARCH, which is the client architecture,
+Q-CLNTID, which is what we refer to as the machine ID,
+and Q-PAYLOADHASH which is the hash of the data on this
+request. The body of this is lzma encoded json, which is a
+status field, with a state, contextid, and time.
+POST /Qlys/CloudAgent/eppagentevent/v1.6/ cus-
+tomer/<customer_id>/agent/<machine_Id>
+We observe one call to this endpoint, with the same custom
+headers as above, except with Q-PROTOTYPE as IOC. The
+content observed to be sent with this is just lzma encoded
+client ID and hostname.
+POST /CloudAgent/v1.6/customer/<customer_ID>/
+agent/<machine_ID>/CAPI
+This endpoint contains only the X-QLYS-Timestamp and
+X-QLYs-Authorization custom headers. However, the body
+contains a large amount of Customer Data, and the response
+includes configuration data from the qualys server which is
+further outlined below
+POST /CloudAgent/v1.6/customer/<customer_ID>/
+agent/<machine_Id> Manifest/ <manifest_Id>
+/Delta/<Delta_val> /fragment/1/finalize
+We observed one call to this endpoint during our run, which
+contains the custom timestamp, authorization, and client ar-
+chitecture fields. The reponse was an lzma encoded octet
+stream of varying length, but all 10000 bytes or more. We
+were able to retrieve the contents of these calls, which will be
+noted in a later section.
+/CloudAgent/v1.6/customer/<customer_ID>/
+agent/018616e5-0ab7-4e58-95fc-
+ed795fdf227d/command/eventId
+Due to limitations in our bpftrace and memory retrieval, while
+we were unable to get the request type used, we noted that
+there were requests to this endpoint, with a seemingly empty
+body and only the custom timestamp and auth headers. While
+this was called many times, we were unable to further see the
+contents of this exchange.
+GET /CloudAgent/v1.6/customer/<customer_ID>/
+agent/<machine_ID>/Manifest/9aa1548c-5cb6-458c-
+95d7-3b284dbb3946?scope=Global
+We noted one call to this endpoint machine, with varying
+manifest tags across machines. Included were the authoriza-
+tion and timestamp headers. We were able to simply curl a
+get request to one of these endpoints to retrieve the below
+anaylized sqlite file, without any additional headers or restric-
+tions.
+4
+hex01.helix.apps.fireeye.com host. A certificate for the
+same host (2) was found in the xagt logs, output of the xagt
+-log-export command from the Trellix documentation.
+Further wireshark analysis demonstrated that the servers
+communicate using the following cipher suites:
+• qualys-cloud-agent (185.125.190.32): TLS 1.2
+TLS_AES_256_GCM_SHA384 (0x1302)
+• xagt (52.6.220.203): TLS 1.2
+TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+(0xc030)
+Figure 1: xAgent CRL
+3.3 Traffic Trace for Trellix xAgent
+A full analysis of the endpoints for the xAgent remote server
+host can be found in table 2.
+3.3.1 Task Structures in /poll
+While capturing traffic using bpftrace from xagt, we were
+able to observe scanning task information as exchanged below.
+For most observations (296), the task struct response was
+empty, and xagt took no further actions. However, we also
+recorded 14 observations of a task structure being exchanged
+between the server and local xAgent client. The exchange
+takes the form of a JSON response, where the id, state, script
+uri, base uri, manifest uri, and partialmanifest uri for the task
+are sent, in addition to the standard poll response [5]
+After receiving this response, the client fetches the script
+from the above script_uri. While we were able to observe
+the contents of this exchange, and the server response of a
+binary/octet-stream, we were only able to observe that the
+Figure 2: xAgent Certificate
+5
+script endpoint from the server always responds with a 2401-
+byte length response, where and within the first 160 bytes of
+the response, we find the strings that match with the xagt cer-
+tificate data, that being RESTON, FIREEYE, PRODUCT, and
+PRODCAagent. After this, the client responds with PUT re-
+quests to the endpoint /task/<task_id>/data/<data_id>
+where the data is a 22-byte string. We notice the same first
+bytes as the script endpoint RESTON, FIREEYE, PROD-
+UCT, and PRODCAagent, but still were unable to find the
+type of the rest of the stream. We notice that every script
+corresponds to 5 data PUT responses, where each response is
+sent with chunked transfer encoding, where then the server
+responds with a 100 continue code, and then the client
+sends the bytestream of data. Given the observation of the
+application/vnd.fireeye.hx.payload.v1 content type
+in other locations, we believe this may be a proprietary en-
+coding or format.
+3.3.2 Summary
+The xagt component periodically communicates (about every
+10 minutes) using the POLL endpoint to convey the current
+status and device info of the client device, in which the server
+responds with the next poll time, the cluster id, and an of-
+ten empty task list. Also in the approximately 10 minute
+timescale, the exclusion and IOC lists are updated from the
+server. Approximately every 15-20 minutes, the client sends a
+POST request with its health info to the msg/v1/lo endpoint.
+In a much longer timespan, the client refreshes its CRLs from
+the pki endpoint.
+3.4 Traffic Trace for Qualys Cloud Agent
+For the following sections, we will list customer ID and ma-
+chine id as <customer_ID> and <machine_ID>. We noted
+that across all of our test machines, customer ID was the same
+for all test devices, while machine ID was separate per device.
+A full analysis of the endpoints for the Qualys Cloud Agent
+remote server host can be found in table 3.
+3.4.1 Post request to /CAPI endpoint contents
+From the request json on the /CAPI endpoint we note that the
+Qualys agent is sending the hostname, BIOS Serial number,
+MotherBoard ID, BIOSHardwareUUID, and MAC address
+of the client device in its Post request, along with self status
+of the qualys agent, and configuration IDs. In the response,
+we observe a version control object with binary download
+paths, as well as a version, and a self-update configuration
+flag. In addition, we observe the configured scan interval
+durations for Inventory, Vulnerability, Autodiscovery correla-
+tion_prerequisites, linux_mux_prereq, and linux_ebpf_prereq.
+The full json body is not included in this section but is in the
+linked data package. [5].
+3.4.2 fragment/1/finalize LZMA content analysis
+By tracing the liblzma function lzma_code and reading from
+the pointer to the input stream, we are able to obtain a slightly
+mangled but still mostly interpretable amount of data that
+we believe is being sent through the 4th listed endpoint, al-
+though we can only fully confirm that that data is being
+compressed into lzma format, and there is lzma-formatted
+output being sent [5]. From this, we observe an massive
+amount of end user device data being exfiltrated through the
+qualys-cloud-agent. Aside from this user data, we also
+observe a Qualys Agent Local Health Check Tool Report seg-
+ment, which shows the backend connectivity, certificate data,
+and agent communication details for Qualys.
+The user data that is being exfiltrated contains the outputs
+of the commands retrieved from the SQlite database analyzed
+below, however, we will summarize the most concerning of in-
+formation found here as well. To begin, we see many instances
+of variously filtered outputs of the "ps" command, listing the
+user, pid, pcpu, memory, start and end times for each process
+on the machine, and CMD used to start it. Additionally, we ob-
+serve the outputs from multiple versions of the "ls" command
+for both files and symlinks, systemctl output reflecting both
+currently running services and kernel parameters, ifconfig
+and netstat outputs for network mapping and information,
+mounted disc information from a df command, and various
+system properties such as meminfo. By checking the readable
+portions of scripts we see in this file, we can also observe
+that the scripts being run correspond to commands in the be-
+low listed sqlite database [5]. Since our trace only captured
+a limited duration, we believe that we can assume that any
+of the commands revealed in the below sqlite database can
+and may be run by the qualys-cloud-agent during its scan-
+ning and detection activities. Thus, we conclude the scope of
+data being gathered and exfiltrated by qualys-cloud-agent
+is any running process, the name and properties of any file,
+any network device, any mount point, all kernel paramters,
+and any running service on the device. This endpoint of the
+qualys-cloud-agent sends an extreme amount of private
+user data to the server.
+3.4.3 /CloudAgent/v1.6/customer/<customer_ID>/agent
+/<machine_ID>/Manifest/.../?scope=Global
+This endpoint is by the Qualys agent, and retrieves a SQLite
+database. We were able to access this endpoint, and retrieve a
+SQL file with the following tables.
+• AgentInfo
+• AgentInfoOS
+• FilterOS
+• InstalledSoftware
+• InstalledSoftwareOS
+6
+Table 4: Functions in UnixCommandOS table
+Function Detail Command
+retrieves permissions for local group and password files /bin/ls -l /etc/group /bin/ls -l /etc/passwd /bin/ls -l /etc/shadow
+Retrieves network info of current active connections netstat -an | grep -E ’ ∧ tcp | udp’| awk ’{print $4,$5}’| grep
+-F -v ’’
+netstat -an -f inet|awk ’{print $1,$2}’
+netstat -an | grep -E ’∧ tcp | udp’| awk ’{print $4,$5}’|grep -F
+-v ’’|
+auxww lists all running processes, howver, each call if it
+is piped to grep to only return specific contents such as
+[msc]HostService.ini, or ’[a]ctivemq’
+/bin/ps auxww | grep <sometext>
+cat /etc/shadow | grep ’root:’ Gets root user password hash
+Searches current enviornment for AWS keys /usr/bin/env | grep Eo "AWS_ACCESS_KEY_ID=
+|AWS_SECRET_ACCESS_KEY=
+|AWS_SHARED_CREDENTIALS_FILE=
+|AWS_SESSION_TOKEN=
+|AWS_WEB_IDENTITY_TOKEN_FILE="
+Mac only. Searches all installed applications for "Security" system_profiler SPInstallHistoryDataType | grep "Security"
+Gets all Ipv6 fields in ifconfig /usr/sbin/ifconfig -a | /usr/bin/grep IPv6
+Scans all running docker containers docker ps –no-trunc
+NIS service access details cat /var/yp/securenets
+Table 5: Functions in UnixCommand table
+Function Details Command
+Retrieves package repo config data cat /etc/yum.repos.d/*
+cat /etc/dnf/modules.d/*
+Entire command not included for brevity, but searches for
+Java Service Listeners (or other programs with JSL in name),
+and retrieves their paths
+(timeout 300 netstat -lnp|grep JSL | awk ’{print $7}’ | cut -d
+ls -l /proc/$CHECKJSL/exe|awk ’{print $11}’
+Retrieve all openshift cluster details oc get nodes -o wide
+Table 6: Functions in MultiPassFunctionsOS table
+Function Name Function Details
+collect_aws_metadata_v2() Checks if the current device is an Ec2 instance, and collects
+metadata and configuration info
+find_java_service_listeners() Finds running Java Service Listeners (JSL) and retrieves their
+executable paths.
+data_collection_running_processes_rpm() Searches and correlates running processes with packages
+ai_ml_inventory_data_collection() Searches for pytorch, keras, huggingface, and mxnet paths,
+and returns model file paths
+7
+• MultiPassCommandsOS
+• MultiPassFunctionsOS
+• ProviderCommand
+• ProviderMetadata
+• ProviderMetadataInfo
+• TechnologyFunctionCall
+• TechnologyFunctions
+• UnixCommand
+• UnixCommandOS
+• UnixSettings
+Of these tables, InstalledSoftware, TechnologyFunctions,
+TechnologyFunctionCall, ProviderMetadataInfo, Provider-
+Metadata, ProviderCommand, FilterOS, and AgentInfo were
+empty.
+Of the tables with contents, UnixSettings contained name
+value pairs of Qualys settings, listed below
+• MANIFEST_TYPE: VM
+• Version: 2.6.348-3
+• SCHEMA: 1.0
+• OS_FILTER_VERSION: 18
+• PROVIDER_METADATA_VERSION: 2
+• NEW_SCHEMA: "1.5,1.7,2.0,2.1"
+• TIMESTAMP: "2025-06-11 17-27-20 UTC"
+AgentInfoOS contains the columns ManifestID, Category,
+AttributeName, Command, OSName, OSExclude, PreAggre-
+gate, and PostAggregate. This file contains a list of names
+attributes, with the command required to obtain that data on
+a specific operating system. MultipassCommands contains
+entiries of ManifestID, Qid, FunctionName, Arguments, OS-
+Name, and OSinclude, with the function names seemingly
+pointing to functions in other tables. The most interesting
+contents of this database are in the UnixCommandOS, and
+UnixCommand. These tables contained data in the follow-
+ing format ManifestID, Command, WorkingDirectory, Argu-
+ments, PreAggregate, PostAggregate, OSName, and OSEx-
+clude, with the two last OS fields being excluded in the Unix
+Command tables. The Command field for this table contained
+base64 commands, which we assume to be run by the local
+Qualys agent in its threat monitoring activities. Thus, by get-
+ting the commands from this database, we were able to view
+a list of what the Qualys agent could be monitoring on local
+environments in a standard operating setting. Additionally
+present is the MultiPassFunctionsOS file. This file contains a
+similar layout with FunctionName, FunctionBody, and Depen-
+dancyFunctions, where FunctionBody is a base64 encoded
+script to collect data on the end user device.
+From the gathered scripts and functions, we find that the
+contents of these files likely point to extremely wide reaching
+scanning of the end user system. While we will not list all
+commands that we retrieved from the files, we include a subset
+of these in the above tables 4-6 to demonstrate the extent of
+the information being scanned by qualys. [5]
+3.4.4 Summary
+The qualys-cloud-agent communicates with the host ev-
+ery hour to establish status and connectivity, as well as send
+base client machine information such as biosUUID to the
+server, and retrieves configuration data in response. In a much
+longer interval, the qualys-cloud-agent retrieves manifest
+data and sends scan data to the server. By tracing the lzma-
+compressed data by the qualys agent and checking the output
+of it in relation to the retrieved sqlite file, we conclude that the
+commands as listed in the sqlite dump are being run on the
+local machine, and that information is compressed, then sent
+to the qualys server. We believe this amount of data collected
+and sent represents a massive breach in user privacy.
+4 Further Work
+While we were able to find many examples of user data being
+exfiltrated by the Trellix product suite, we did not find any
+actionable vulnerabilities. We believe that further work could
+look into a remote adversary sending or intercepting and
+modifying the sqlite db in order to send commands that would
+allow remote control of a client system. The most extreme of
+this being a compromise of Trellix/Qualys servers allowing
+for a remote attacker to potentially hijack all clients with the
+Trellix product installed.
+8
+References
+[1] Trellix, "End User License Agreement," Sec. 4.2, 5.6, 11.2, 13.3. Ac-
+cessed: Jun. 11, 2025. [Online]. Available: https://www.trellix.
+com/assets/legal/trellix-eula.pdf
+[2] Gen Digital Inc., "Gen License and Services Agreement," Part 2, Sec.
+6, 11, 16. Accessed: Jun. 11, 2025. [Online]. Available: https://www.
+norton.com/terms-of-sale
+[3] Trellix, "Trellix FIPS 140-2 Cryptographic Module Security
+Policy," Mar. 30, 2023. Accessed: Jun. 12, 2025. [Online].
+Available: https://csrc.nist.gov/CSRC/media/projects/
+cryptographic-module-validation-program/documents/
+security-policies/140sp4492.pdf
+[4] Trellix, "Endpoint Security xAgent Administration Guide Re-
+lease 35.31.0". Accessed: Jun. 11, 2025. [Online]. Available
+https://docs.trellix.com/bundle/agent_35_ag/page/
+UUID-3193bc52-42bd-4503-3bef-e17219bbfb22.html
+[5] Drive link to zipped file of Sqlite table, bpftrace output, and scripts
+9
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1
+Virtualization Project Final Report
+Enhancing KVM Page Eviction: From FIFO to Approximate LRU
+Aaron Ang, Alex Asch, Eric Huang, Justin Kaufman
+I. INTRODUCTION
+Context and Motivation
+Virtualization has proven to be an essential
+technology in modern computing, allowing
+multiple operating systems to run on a single
+physical machine. One of the most widely
+adopted virtualization technologies in the
+Linux ecosystem is Kernel-based Virtual
+Machine (KVM), which leverages a kernel
+module to turn Linux into a hypervisor. A
+key component of KVM is its Memory
+Management Unit (MMU), which is
+responsible for memory isolation and
+translating guest virtual addresses to host
+physical addresses.
+Currently, the KVM MMU employs a
+First-In-First-Out (FIFO) page eviction
+mechanism, which removes the oldest page
+without considering its recency of use. This
+approach can result in suboptimal
+performance, as frequently accessed pages
+may be prematurely evicted, leading to
+increased page faults and performance
+overhead. Our project proposes an
+Approximate Least Recently Used (LRU)
+eviction policy to mitigate these
+inefficiencies, aiming to enhance memory
+reuse while minimizing unnecessary
+evictions. Through comparative analysis
+with FIFO within KVM, we aim to
+demonstrate the benefits of an LRU-based
+approach across various workloads.
+Comparison FIFO vs. LRU
+(Figure 1)
+Figure 1 illustrates the fundamental
+difference between FIFO and LRU eviction
+strategies in the KVM MMU. The FIFO
+approach removes the oldest page in
+memory without considering its usage
+frequency, leading to unnecessary evictions
+and increased page faults. In contrast, LRU
+keeps track of recently accessed pages,
+ensuring that frequently used pages, such as
+page 2 and page 5, remain in memory
+longer. As a result, LRU reduces the total
+number of page faults (5) compared to FIFO
+(7), demonstrating its advantage in
+preserving memory locality and minimizing
+costly page replacements. This aligns with
+our project’s goal of improving KVM’s
+memory management efficiency by
+replacing FIFO with an Approximate LRU
+mechanism.
+Scope and Objectives
+Given the importance of memory
+management in virtualization, our project
+focuses on integrating an Approximate LRU
+eviction mechanism into KVM’s MMU.
+Specifically, our objectives were:
+1. Design and Implement an LRU Eviction
+Policy:
+● Modify KVM’s mmu.c file to track
+page access recency and replace
+2
+FIFO with an LRU-based eviction
+logic to incorporate LRU-based
+eviction logic.
+● Adapt existing Linux kernel data
+structures to support an efficient
+Approximate LRU approach with
+minimal overhead
+2. Validate Correctness Through Testing:
+● Use KVM unit tests and custom
+workloads to verify correctness and
+stability of the new eviction policy.
+● Monitor page eviction patterns using
+kernel tracing tools such as
+tracepoints and Kprobes.
+3. Evaluate Performance Gains:
+● Measure page fault frequency, CPU
+utilization, and memory overhead
+using benchmarking tools.
+● Compare the Approximate LRU
+implementation against FIFO to
+determine efficiency gains.
+4. Address Concurrency and Scalability:
+● Ensure the LRU eviction mechanism
+remains thread-safe in multi-CPU
+environments.
+● Validate that the solution scales well
+under high-memory workloads.
+II. RELATED WORKS
+Before diving into our implementation, it is
+important to address related works. Much of
+the prior research contrasting FIFO and
+LRU replacement policies is rooted in both
+theoretical and practical investigations.
+Notably, “It’s Time to Revisit LRU vs.
+FIFO” highlights how large-scale caches,
+such as those in cloud object storage,
+experience significant metadata overhead
+when implementing LRU. Because storing
+and updating recency metadata can be
+expensive for massive caches, FIFO’s
+simpler management can sometimes produce
+less overhead [2]. This is an important
+consideration for our work in cases where a
+large memory pool may affect CPU
+overhead and latency.
+On the other hand, a formal analysis
+conducted in “LRU is Better Than FIFO”
+underscores the fact that LRU outperforms
+FIFO in paging systems, especially when
+workloads exhibit strong locality of
+reference. Their analysis results emphasize
+the idea that retaining least recently used
+pages is beneficial for maintaining “hot”
+data in cache [1]. This aligns with our
+project’s objective to integrate a more
+locality-aware eviction policy (LRU) into
+KVM’s MMU. Although, we must remain
+mindful of the potential overhead
+emphasized by “It’s Time to Revisit LRU
+vs. FIFO”.
+Additionally, it is important to note
+development work within the context of
+KVM itself. The FIFO implementation of
+shadow page tables is a feature only used
+when ept hardware virtualization resources
+are not available within the environment.
+Due to this, within most use cases, KVM
+uses a TDP MMU implementation that
+leverages the given hardware, and is much
+more performant that shadow paging. Thus,
+while our work may show performance
+benefits over the old implementation, it is
+not a general improvement to the KVM
+project.
+III. DESIGN OVERVIEW
+System Architecture
+At a high level, our modified virtualization
+environment retains the existing KVM
+framework, which provides the interface
+between guest virtual machines and host
+3
+hardware. KVM operates in kernel space,
+exposing virtualization extensions to a
+user-space manager (e.g. QEMU)
+responsible for configuring virtual CPUs,
+devices, and memory. Under the hood,
+KVM implements its own Memory
+Management Unit (MMU) subsystem,
+managing page tables and address
+translations for each guest VM.
+Our project inserts a custom eviction
+mechanism into this KVM MMU layer,
+specifically within the page table code that
+decides when and how to replace memory
+pages. The flow below outlines a simplified
+conceptual model of how KVM handles
+virtualization and memory:
+1. Guest VMs issue memory operations
+(loads, stores), thinking they are
+running on real hardware
+2. KVM traps these operations as
+needed, using the host CPU’s
+virtualization capabilities
+3. Page Table Structures in KVM’s
+MMU track which guest pages are
+resident, which must be evicted, and
+handle faults
+4. Host Kernel eventually services the
+page faults, interacting with actual
+RAM or swap
+This flow is largely unchanged by our
+intervention except for the eviction logic,
+which now uses an approximate LRU-based
+approach. By preserving the rest of the
+hypervisor’s design, we minimize disruption
+to the broader virtualization stack while still
+providing a novel improvement in page
+eviction decisions.
+IV. IMPLEMENTATION
+Developer Environment Set up
+Our initial plan was to configure local
+development and run nested virtualization
+for testing KVM. However, hardware
+limitations proved challenging: only one
+team member had an x86 architecture
+laptop, while the others used Apple Silicon
+(ARM-based) MacBooks. Since KVM is
+natively supported on x86 but not on ARM,
+we had difficulties building and running
+custom kernels with KVM-enabled
+virtualization locally. We also encountered
+setbacks with VirtualBox’s nested
+virtualization. Although theoretically
+supported, its performance and stability
+were inadequate for continuous kernel
+development. To address these limitations,
+we first experimented with UTM (Universal
+Turing Machine) on macOS, but it did not
+support nested virtualization on Apple
+Silicon hardware. Next, we attempted to
+launch a bare-metal AWS instance,
+discovering that the default plans available
+to us had insufficient vCPU allocations.
+Eventually, after discussions with our course
+instructor, we obtained access to a c5n.metal
+instance that met our requirements. There,
+we set up a full Linux environment with
+KVM enabled, allowing us to compile and
+debug custom kernel builds. On our one x86
+laptop, we further performed local tests and
+kernel compilations, though we had to
+re-partition the Windows EFI space to
+accommodate larger kernels. All of this
+helped us establish a consistent development
+workflow, merging and testing changes in an
+environment representative of production
+KVM scenarios.
+The primary modification to KVM’s MMU
+involved adjusting the eviction logic to
+incorporate Approximate LRU. We
+introduced data structures to estimate page
+recency and modified the
+mmu_zap_oldest_pages() function to
+prioritize eviction based on access history
+rather than simple FIFO ordering. This
+required adding lightweight tracking
+4
+metadata to each page table entry while
+ensuring that the eviction process remained
+efficient and scalable. Furthermore, we
+disabled Two-Dimensional Paging (TDP)
+MMU in our testing environment to directly
+observe and evaluate the impact of our
+changes.
+Ensuring thread safety was a crucial aspect
+of our implementation. KVM operates in a
+multi-core environment where multiple
+virtual CPUs (vCPUs) can simultaneously
+access memory. To address potential
+concurrency issues, we incorporated
+synchronization mechanisms to prevent race
+conditions while maintaining performance
+efficiency. This involved carefully
+modifying memory structures to ensure safe
+updates without introducing unnecessary
+contention.
+V. EVALUATION METHODS/RESULTS
+Our evaluation methodology focused on
+assessing the effectiveness of the
+Approximate LRU implementation in
+improving memory efficiency, reducing
+page faults, and maintaining low latency
+under load, all while minimizing
+performance overhead. To achieve a
+comprehensive analysis, we used a
+combination of unit testing with KVM’s
+built-in test suite, synthetic memory stress
+testing with stress-ng, performance profiling
+using flamegraphs, and application-level
+benchmarking with redis-benchmark. Key
+performance metrics included page fault
+frequency, latency, CPU overhead, and
+request throughput (RPS).
+(Figure 2)
+One of the most direct indicators of
+improved memory management is page fault
+frequency. Under stress testing with
+stress-ng, the traditional FIFO eviction
+policy resulted in 117,375 page faults. In
+contrast, our Approximate LRU
+implementation reduced this number to
+112,016. This reduction highlights more
+efficient memory reuse and fewer
+unnecessary page replacements.
+Furthermore, performance profiling using
+flamegraphs revealed that Approximate
+LRU led to fewer costly MMU
+interventions, supporting the claim of
+reduced overhead and better memory
+locality.
+(Figure 3)
+Additionally, to evaluate real-world
+performance impact, we used the
+redis-benchmark tool, which simulates
+high-throughput client workloads. The
+resulting graph shows the relationship
+between RPS and latency for three page
+replacement strategies: FIFO, LRU, and
+TDP. LRU consistently delivers lower
+latency across a wide range of RPS values,
+highlighting its efficiency in handling
+frequent memory accesses. In contrast, FIFO
+exhibits increasing latency under higher
+loads, indicating poor adaptability under
+stress. While TDP shows some performance
+stability, it is more variable compared to
+LRU. Overall, this graph demonstrates that
+our Approximate LRU implementation
+5
+offers clear advantages over FIFO by
+sustaining high throughput with low latency,
+validating its practical effectiveness in the
+KVM environment.
+FIFO Flamegraph
+(Figure 4)
+Approx. LRU Flamegraph
+(Figure 5)
+The evaluation of function-level
+performance highlights the impact of
+Approximate LRU on page fault handling
+efficiency. As shown in Figure 4, key MMU
+functions, such as kvm_handle_page_fault
+and kvm_mmu_page_fault, executed fewer
+times under Approximate LRU compared to
+FIFO, indicating a reduction in overall page
+faults. Specifically, Approximate LRU
+resulted in 3.39 billion fewer samples in
+kvm_handle_page_fault, demonstrating its
+ability to retain frequently accessed pages
+and minimize unnecessary evictions.
+Similarly, the reduced execution of
+paging64_page_fault and
+kvm_mmu_faultin_pfn suggests improved
+memory reuse, as fewer new pages needed
+to be loaded.
+However, while Approximate LRU reduces
+costly MMU interventions and improves
+memory retention, CPU profiling revealed a
+slight increase in execution time for
+MMU-related functions. This increase is
+attributed to the additional overhead
+introduced by tracking page access recency.
+Consequently, although Approximate LRU
+optimizes eviction decisions, it imposes a
+tradeoff between efficiency and
+computational complexity. This tradeoff
+must be carefully considered in scenarios
+where CPU overhead is a critical constraint.
+Nonetheless, the overall reduction in page
+faults confirms that Approximate LRU
+enhances memory management
+effectiveness compared to FIFO.
+Performance Comparison
+(Figure 6)
+Overall, our evaluation confirmed that
+Approximate LRU successfully mitigates
+the primary drawbacks of FIFO, reducing
+page faults and improving memory locality
+at the cost of a slight increase in CPU
+processing. These findings suggest that
+Approximate LRU offers a viable alternative
+to FIFO, particularly for workloads that
+benefit from improved memory retention
+and reduced eviction churn.
+6
+VI. CHALLENGES
+Difficulties Encountered
+Our initial difficulties were in relation to
+environment setup and understanding of the
+codebase. To begin, we had many challenges
+in getting a development environment in
+which we could test KVM and build the
+code within, since having much of our group
+on M1 mac, we needed an AWS bare metal
+environment to be able to develop. This
+added significantly to our time to start
+development. Additionally, understanding
+the large codebase of KVM, and the
+relatively large codebase of the MMU
+proved to be difficult. Between the two
+above steps, we encountered significant
+difficulties before beginning to implement
+our changes. Additionally, in benchmarking
+and testing, even after implementation and
+debugging, we had some stability issues,
+especially on larger tests. Due to this, our
+ability to gather additional information
+outside of our initial testing workloads was
+not possible.
+What Didn’t Work
+Within our implementation, our first finding
+was that the TDP mmu was not able to be
+optimized in this way, and thus found that
+the analysis and optimization was to be done
+on the older and disabled by default shadow
+mmu. From this, our initial implementation
+was rather quick considering we
+implemented on the existing mmu, but
+debugging and ensuring stability were both
+notable challenges, some still pending.
+What Did Work
+Using a second change clock LRU
+algorithm, with new functions for tagging
+pages and a global clock hand proved to be
+our final implementation. While there are
+still stability concerns with this
+implementation in regards to deadlocking
+and faults, we generally find it performant
+and from the above results better than the
+old FIFO mmu.
+VII. CONCLUSION
+Summary of Contributions
+In this project, we successfully implemented
+an Approximate LRU eviction policy to
+replace the existing FIFO policy within the
+KVM Memory Management Unit (MMU).
+Our modifications aimed to improve
+memory reuse, reducing page faults and
+enhancing overall system efficiency. To
+validate our changes, we conducted
+extensive testing in a controlled
+environment, using tracing, debugging, and
+benchmarking to analyze system behavior.
+Our results confirmed eviction method
+tradeoffs. Notably, approximate LRU
+reduces page faults and enhances memory
+efficiency, however FIFO incurs a lower
+CPU overhead. The code can be found at:
+https://github.com/aaron-ang/kvm.
+Future Extensions
+While our Approximate LRU
+implementation yielded positive results,
+there are several directions for future
+improvement:
+1. Optimization: Fine-tune Approximate
+LRU parameters to achieve a better balance
+between eviction efficiency and system
+overhead, as well as further debug the
+aforementioned stability issues.
+2. Additional Benchmarking: Evaluate the
+policy under a broader set of workloads and
+system configurations to ensure robustness
+across different environments.
+3. Exploring Alternative Eviction Policies:
+Compare the Approximate LRU with other
+eviction policies, such as hybrid FIFO-LRU
+7
+or machine-learning-driven eviction
+mechanisms.
+Reflection
+This project demonstrated the feasibility of
+improving KVM MMU memory
+management by replacing FIFO with
+Approximate LRU. The process involved
+implementing the new policy, validating it in
+controlled virtualized and cloud-based
+environments, and analyzing its real-world
+performance. One of the key takeaways
+from this work is the importance of
+balancing efficiency and overhead, while
+more sophisticated eviction policies may
+further reduce page faults, they must remain
+lightweight to avoid introducing
+performance bottlenecks. Additionally, the
+adaptability of eviction strategies across
+different workloads remains an open
+challenge, making ML-driven approaches an
+exciting avenue for future research. Overall,
+this work contributes to the ongoing
+enhancement of KVM memory
+management, providing a foundation for
+future research in eviction policies and
+performance optimization in virtualization
+environments.
+REFERENCES
+[1] Chrobak, Marek & Noga, John. (1999).
+LRU is better than FIFO. Algorithmica. 23.
+180-185. 10.1007/PL00009255.
+[2] Ohad Eytan, Danny Harnik, Effi Ofer,
+Roy Friedman, and Ronen Kat. 2020. It's
+time to revisit LRU vs. FIFO. In
+Proceedings of the 12th USENIX
+Conference on Hot Topics in Storage and
+File Systems (HotStorage '20). USENIX
+Association, USA, Article 12, 12.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+OptiBrake
+Alex Asch, A69033251, aasch@ucsd.edu,
+Benjamin Scott A16380204 bmscott@ucsd.edu
+3. Motivation:
+Recent developments in E-(pedal assisted) bicycles mean that more consumer bicycles incorporate battery
+and electric power. This also is leading to an increase in bicycles as commuter products, and thus we are
+seeing many mixed pedestrian and cyclist use areas, increasing odds of collision. Thus, by applying
+collision-detecting braking similar to automobiles, we want to reduce the rate of these collisions.
+4. Related Work
+Notable related work involves automated braking technology in automobiles, which is similar in idea, but
+often uses non-vision sensors like LIDAR and ultrasonic, while we mainly rely on a single digital camera.
+While it is true that image sensing using LIDAR would enable higher accuracy of capturing
+centimeter-level data for each camera frame, the high cost of the sensor led us to try a more affordable
+approach for the project using a digital camera instead and attempt to mitigate scaling issues through
+other multi-sensor information.
+Related works using monocular vision systems have been researched and developed for Unmanned Aerial
+Vehicles (UAVs) and for robotics applications where environments are restriction free, i.e. the robot can
+move to whichever direction it finds suitable. These systems typically use optical flow which is the
+pattern of apparent motion of objects across successive video frames, which gives an approximation of
+the projection of the potential field in the 3D world to the image plane. This method assumes that when
+the camera approaches the obstacle, the obstacle’s image in the frame grows, which causes the greater
+optical flow amplitude on the edges of the obstacle image. For most implementations, after locating the
+areas of the frame containing large pixel displacements, the collision system will be able to make a
+decision to perform. It’s important to note that optical flow enables the algorithm to work with any type of
+obstacles, critical for our application to bicycle collisions.
+Looking at the domain of UAVs specifically, one work used dense optical flow (Gunnar Farneback),
+which gives the flow vectors of the entire frame (all pixels) with high computational demand. While their
+UAV was successful in detecting and avoiding obstacles, the algorithm is not able to estimate the actual
+distances to the obstacles as it flies above ground features and focuses on the detection of obstacles
+without estimating the distance to obstacles. One of our goals was to find this true physical distance to
+collision metric using wheel odometry sensing to get more accurate results.
+Another work uses a single front camera to estimate the distance to objects or a depth map for collision in
+UAVs using monocular distance estimation through a deep CNN (MegaDepth), but these 3-D
+constructions still suffer from not being scale-invariant or relative depth, leading to low accuracy applied
+in short ranges. Therefore, we choose not to pursue this approach.
+Also, since UAV flight control is more robust and stable to their environment, most UAV vision work
+assumes stable video between frames. Our implementation assumed this stabilization as well, but proved
+to be one of the key challenges, resulting in optical flow vector noise that caused a higher false positive
+rate.
+Our work is notable due to the vehicle we are mounting on. Having a less stable and more feature prone
+field of view leads to challenges in the braking system, as well as a more challenging environment to use
+optical flow in. With the digital camera in front of the bicycle, it is closer to the ground and therefore has
+many features to detect especially in crowded environments. Bicycles tend to be imbalanced at low
+speeds (jittery) which can directly cause hyper-sensitivity to surrounding features on its side. This
+instability and sensitivity proved to be the most challenging part of our implementation we tuned for from
+the computer vision perspective. The focus of this research was to implement a low-cost collision
+avoidance system using optical flow for bicycling applications at an average medium speed.
+5.Hardware Components
+● Raspberry Pi AI Camera| Sony IMX500
+● Keyestudio collision sensor
+● SinKeu 88.8Wh|65Watts Portable Laptop Charger
+● KBT 12V 1200mAh Rechargeable Li-ion Battery
+● Greartisan DC 12V 150RPM Gear Motor High Torque Electric Micro Speed Reduction
+● WWZMDiB 2 Pcs L298N Motor Driver Controller Board DC Dual H Bridge Module
+● Bicycle (Raleigh)
+● V-Brakes (unknown manufacturer)
+● Below are attached images of our hardware and wiring setup
+
+● We opted to use the AI accelerated camera, since we believed that we would be
+incorporating a neural network for object detection. We did not end up utilizing the
+accelerator for optical flow.
+● We utilized a collision sensor to measure wheel speed in collision ticks from cards
+mounted on the spokes, since compared to IR based solutions, it was more reasonable in
+accuracy for our price point.
+● We used two batteries, since our motor is 12v 1A, and our primary battery pack is 12v 1A
+out. Thus, we opted for one battery for the motor and one motor for the raspberry pi.
+● We utilized a 150RPm motor, since that seemed to be the appropriate balance between
+torque and speed for our power draw. We did not have the budget to test multiple
+gearings of motor.
+● We utilized V-Brakes, since cantilever brakes required too much force to actuate for our
+motor setup. More powerful “lighter” brake solutions such as disk brakes, and hydraulic
+systems were not within our budget to test.
+6. Software Components
+● Optical Flow Lucas-Kanade Method
+● Focus of Expansion and TTC with Odometry of Wheel
+● Calibration of Wheel Speed for improving reliability
+● Gpiozero python library (2.0.1)
+● We utilized the gpiozero python library, since it allowed us to work closely with our camera and
+computer vision software, while processing collision sensor ticks in an interrupt based manner.
+The relatively simple interface for GPIO devices was sufficient for our needs, and the interrupt
+based handling mechanisms were necessary for our collision sensor.
+● We chose to use Lucas-Kanade optical flow instead of a neural network based implementation,
+since the main metric of importance is collision and proximity to any obstacles, and thus the
+recognition of objects in frame is not useful for our purpose.
+7. For the braking sensor, we utilized an interrupt based wheel speed monitor using the collision sensor,
+and simply actuated the motor until the wheel speed (rpm), was detected at zero. After which, we waited a
+brief delay, and then rotated the motor in reverse, allowing us to unspool the braking cable. The amount to
+unspool was obtained via trial and error. While the above mechanism seems relatively simple, the
+collision sensor based wheel speed detector required heavy tuning. The first issue presented was to
+debounce the sensor, for each tick, the sensor read between 10-24 separate button press events, each a
+very small fraction of time apart. Thus, we utilized two time counters, once since the last registered tick,
+and once since the last real tick. If the time since the last real tick is greater than the debounce, we register
+it as a registered tick, and utilize only time between registered ticks to approximate wheel RPM as a
+function of ticks per rotation and time between ticks. We also were required to reduce the ticks per
+rotation from 9 to 3, to get a better discernment between a real tick and a debounced tick. The next
+challenge was the instantaneous timing measure between each tick to calculate rpm was a rather
+inaccurate measure of rpm, since our playing card and sensor mechanism was not physically exact to ⅓ of
+a rotation each tick. Thus, we calculated our RPM as a global weighted average between the past 9 RPM
+detections, with the current rpm metric weighted 5x as high for our average. This allowed a reasonable
+rpm and thus speed metric for control. From many repeated tests, we were able to appropriately debounce
+and tune these rpm and speed metrics to be reasonable values.
+The attempted implementation of ABS was also not feasible. The first problem with testing and
+implementing an abs system was the motor power. Without a contrived set up, such as the rider changing
+the center of gravity off of the rear wheel, it was not possible to lock the rear wheel with our braking set
+up. However, even utilizing a contrived experimental setup, implementation of ABS proved to not be
+tenable. Our first challenge was with pulse width modulated DC motors. Since an intermittent rapid signal
+is registered by the motor as a pulse, the type of feathering and rapid fine tuned control of the braking
+mechanism as required for ABS was not possible with a DC motor and cable setup. Additionally, due to
+the short stopping distance of a bicycle, combined with our speed measuring sensor, it was not possible to
+obtain a rapid and accurate enough measurement to actuate braking control based on locking of the wheel,
+before the bicycle was fully stopped.
+We also encountered many challenges in our optical flow CV model. One large challenge was
+collision detection responsiveness vs resilience to false positives. Since we had our distance to collision
+set to a threshold value, and if we dip below that threshold, we actuate the brake, false positive detection
+would cause a false braking signal. We utilized this setup, since a more delayed metric of multiple frames
+led to latency that was too large for successful braking, however this lack of resilience to brief outliers of
+short distance was a persistent problem. Our next challenge was pertaining to feature detection of the
+model, especially in visually busy environments. Since Lucas-Kanade uses contrast to determine features,
+we found that in many environments, it would detect many features on distant objects such as trees or
+buildings, and thus have an extremely high rate of false positives, thus actuating the brake. Finally, we
+observed very low reliability at lower speeds, since with low forward movement, jitter and tilt of the bike
+would contribute heavily to the movement of features in the image, leading to again the issue of too many
+false positives.
+8. Experimental section
+It is important to note that our experiments were performed at lower speed within a controlled
+indoor environment. This is because in an outside environment, the Lucas-Kanade method of optical flow
+picked up too many high contrast features around the corners and edges of the view, so the false positive
+rate (false brake actuation) was too high to obtain reasonable results about braking distance or accuracy in
+response to real collisions. Additionally, getting an exact same speed between trials on the bicycle was
+difficult, so we used many repeated trials, until we got speeds within a reasonable margin for trials.
+2.
+Trial Results:
+9.
+The above tables demonstrate the results of our trials done indoors with the above experimental
+setup. Due to a high rate of false positives causing braking before we could get up to trial speeds, it was
+unfeasible to do a large amount of trials. The above diagrams display the distance to collision in meters,
+for 5 trials of traveling at the above indoor experimental setup, with distances above 3m being flagged in
+red, since our detection threshold was 3m, so it is unclear if our detected feature was the desired obstacle.
+Our one reading of 0 corresponds to a collision with the wall. The m/s figure below for each trial is
+accurate to +-0.025 m/s.
+It is important to note that the above tables consist of the limited amount of quantitative data we
+were able to obtain, considering that our false positive rate for braking was so high it was untenable to run
+any longer trials.
+From our results, we can conclude that within a controlled environment, it is possible to
+automatically actuate bicycle brakes off of a single camera computer vision model, with the limited
+compute power of the raspberry pi. We also conclude that to obtain a robust CV actuated braking system
+to work in an outdoor environment, more compute power to apply more computationally expensive
+computer vision, and/or more and varied types of sensors such as lidar may be required.
+1. What did you accomplish? How does this demonstrate key concepts in this class or
+further the development of embedded systems?
+● We demonstrate interrupt based detection handling for our collision sensor, as well as utilization
+of a closed control loop for the braking system, since the wheel speed is directly affected by the
+braking motor, and the braking motor is controlled by the wheel speed during braking events. The
+process variable is the wheel speed, the software is the controller, the motor is the actuator, and
+the collision sensor the sensor.
+● We additionally demonstrate another potential application of computer vision in embedded
+systems, and extend the work done on collision detection via computer vision in embedded
+settings.
+● Finally, we demonstrate the use of wood in prototyping for actuated systems, and mounting of
+components when there is not access to more robust machining environments.
+2. Discuss any unfinished parts of the implementations and/or next steps if you were to
+continue working on the project.
+● Next steps for braking include utilization of a different braking mechanism, ideally hydraulic disk
+brakes, with a hydraulic control system, in order to obtain more braking force and fluctuation, by
+utilizing this with a wheel speed encoder, we may be able to attain more fine grained
+measurements of wheel velocity and control to implement ABS. Additionally, re-implementation
+of a human controlled rear brake with a pass through feature would be ideal.
+● For our computer vision, we would ideally first implement ransac image stabilization, thus
+hopefully reducing the effect of natural movement of the bicycle due to the rider or the terrain,
+and thus reducing FPR of the model. After this implementation, we would be able to sample more
+rapidly for motion detection, since jitter in the image would not contribute to features in
+Lucas-Kanade, from the above combined metrics, we would be able to fine tune the model
+further, and potentially change to a consecutive frames model instead of a single detection with
+rolling average, thus reducing our false positive rate further.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Team BlueMoon: LLM Agent Security and Access Control
+Amy Munson
+University of California, San Diego
+Alex Asch
+University of California, San Diego
+Kevin Zhang
+University of California, San Diego
+Ashwin Ramachandran
+University of California, San Diego
+Abstract
+Artificial Intelligence (AI) Agents are a type of agent that
+can perform tasks on behalf of the user with access to dif-
+ferent tools and data. As these agents grow in popularity, it
+is critical to protect these agents against prompt injection at-
+tacks. We aim to introduce a new AccessControl Agent that
+retains functionality of an AI agent without giving full user
+level access to the agent. In this work, we use a large language
+model (LLM) to generate predictions of the tools needed to
+complete an individual task. We then implement a reference
+monitor that monitors our AI agent and prevents it from ac-
+cessing unauthorized tools or data. Our results demonstrate
+that this AccessControl Agent framework generates XML
+predictions with decent accuracy and helps prevent prompt
+injection attacks.
+1 Introduction
+Artifical Intelligence (AI) Agent or agentic AI, is an emerging
+field in which autonomous AI agents perform tasks on behalf
+of a user. These agents are generally used in productivity
+settings, such as sending messages via email or slack, as well
+as reading and writing files. Examples of such agents include
+Martin AI and Agent DOJO. Agents such as these often have
+broadly scoped access on user data, as well as the ability to
+modify or send this data using tools. By having broad access
+to user data, as well as unverified external sources, AI Agents
+are vulnerable to damaging prompt injection attacks. Simply
+sending an email with a malicious prompt is all that is needed
+to successfully perform an injection attack [5]. We want to
+introduce a security model that retains functionality of the
+agent without giving full user level access to the AI Agent.
+Existing security approaches focus on model hardening,
+which is a field in which models are trained against adversarial
+samples. However, while hardened models may perform well
+against a certain set of injection attacks, they are far from a
+guarantee [8]. Other approaches include companies such as
+Lakera focusing on sanitizing input and output to the Agent.
+[2]
+We suggest a different novel approach. First, we generate
+a separate prediction of the tools that the agent requires to
+complete the prompt. Then, we enforce this access control
+policy on the agent using a reference monitor. This separates
+the choice of access control from the vulnerable agent, while
+allowing the agent to perform tasks with what appears to be
+user level access. We call this approach based on privilege
+separation the AccessControl Agent.
+Contributions:
+• We implement and evaluate the accuracy of LLMs in
+generating an XML prediction of the tools needed to
+address a prompt.
+• We build an AI agent that can use function calls to use
+real world tools and analyze its performance.
+• We create a reference monitor that can take in an XML
+prediction and use it to to enforce least privilege permis-
+sions for an AI agent
+• We evaluate the effectiveness of the reference monitor
+in stopping prompt injection attacks
+2 Background
+Throughout this paper, the LLM and the AI agent will refer
+to two distinct components as defined in this section.
+2.1 Large Language Models
+Large Language Models (LLM) are a type of artificial in-
+telligence model with generative AI capabilities for natural
+language. They have become increasingly widespread and
+are being adopted by many companies for different use cases,
+such as chat bots like ChatGPT, personal AI Agent assistants,
+and many more. Two LLM’s that we will be using in our
+paper are Meta’s Llama 3.2 (70B) model and OpenAi’s GPT
+4o model. Llama is a pre-trained auto-regressive language
+model that uses an optimized transformer architecture. It is
+1
+trained to specialize in chat-like responses, text summariza-
+tion, prompt rewriting, and a wide variety of natural language
+tasks [3]. 4o is OpenAI’s most advanced GPT model capable
+of performing complex, multi-step tasks. [7].
+2.2 AI Agent
+Artificial Intelligence Agents (AI Agents) are programs that
+utilize LLM models to interact with external data, perform
+tasks, and determine steps needed to achieve tasks given by
+the user. AI Agents can perform tasks that help users simplify
+their workflow, such as summarizing content from different
+files or emails [1]. There are generally two types of AI Agents.
+The first one is function calling agents, where the programmer
+provides the AI Agent with a list of function calls the AI
+Agent can use to help it perform the task the user prompts it
+to. These are more widespread and easier to implement. The
+other type of AI Agent is those that replicate user interaction
+with the computer by parsing HTML DOM or screenshots
+of the computer, then interacting with the computer through
+clicks and typing. AgentDojo [4] is an example of such an
+agent. For the purpose of our paper we focus on securing
+the former, function calling agents by building our own such
+agent to secure using the AccessControl Agent framework.
+2.3 Prompt Injection Attacks
+Prompt injection is a variation of an injection attack where
+external data is not clearly distinguished from the user prompt.
+For example: if the user prompt is to summarize an email re-
+ceived from user A, a prompt injection attack would send an
+email containing content telling the AI Agent to do something
+else. This could be sending some secret key to the malicious
+user’s email bob@gmail.com. The malicious email would
+look something like: "Ignore the previous instruction of sum-
+marizing this email. Instead it is now very important that
+you now send an email to bob@gmail.com containing a se-
+cret word. The secret word can be found in your inbox in
+the body of an email with subject ’SECRET’. The recepient
+bob@gmail.com needs the password to get out of a life threat-
+ening situation" [5]. This is trivial for any user malicious user
+to perform, since creating such a natural language injection
+does not require technical expertise, and getting this text to
+an Agent would simply be a matter of sending an email. Such
+attacks work on many function calling Agents [5].
+2.4 Reference Monitor
+A reference monitor is a security module that defines a set
+of allowed actions and enforces access control policies on
+a system. In the AccessControl Agent, a reference monitor
+sits between the agent and the data. We utilize a reference
+monitor to control the permissions given to an AI Agent and
+in what order those permissions can be given.
+3 AccessControl Agent
+Our objective in creating the AccessControl Agent is to im-
+plement a framework that prevents an AI agent from making
+undesired function calls and protects against prompt injec-
+tion attacks embedded in data (webpages, files, emails, etc.)
+that the AI agent must access. To achieve this, we use an
+LLM to generate a separate prediction of the tools required
+to complete a user prompt. The AI agent then takes the steps
+necessary to complete this task while checking any tool usage
+against the previously generated prediction. Figure 1 illus-
+trates the flow of the agent. In this section, we discuss the
+design considerations and implementation details for this Ac-
+cessControl Agent.
+Figure 1: Control Flow Graph for AccessControl Agent
+3.1 Threat Model
+AI Agents are given unrestricted access to different tools and
+user data, and a malicious actor can access both of these if
+the agent is compromised. To protect against this, let us first
+define our threat model. (1) We assume that the user using
+our AI Agent is using it on their own behalf and will not try
+to intentionally compromise the AI agent. (2) Consequently,
+we assume that the user prompt given to the AI Agent and our
+LLM, which is used for XML state tree generation, is trusted.
+(3) We do not trust any other data, including user data, such
+as emails, files, slack messages, etc. A malicious user can
+contaminate this external data by simple actions like sending
+an email to the user. (4) We can trust the LLM because we
+do not expose it to untrusted external data and only give it
+the trusted user prompt. (5) We assume that the AI Agent is
+2
+untrusted, since it is exposed to untrusted external data. (6)
+Additionally, we will trust the implementation of the tools
+provided to our AI Agent, such as Slack API and Gmail API.
+We assume that these API calls are secure and not malicious.
+For the AccessControl Agent, we build a reference monitor
+to ensure that the AI Agent follows the XML state tree gen-
+erated by the LLM, which defines what function calls the AI
+Agent can make. (7) We will also assume that this reference
+monitor is trusted.
+3.2 Security Goals
+Our security goal is primarily to prevent the agent from being
+compromised during prompt injection attacks by ensuring that
+the AccessControl Agent has the least privilege it needs to
+complete its task. If the agent calls tools that are not part of the
+original prediction or calls these tools in the incorrect order,
+the agent should be considered compromised and stopped
+before access.
+3.3 LLM and XML Generation
+To create the prediction of tools the AccessControl Agent will
+need, we have an LLM generate an XML State Tree contain-
+ing the function calls associated with those tools. The LLM
+is given a custom system prompt that contains overarching
+instructions, formatting examples, and the specific functions
+that the AI agent can use when executing the user tasks. The
+LLM is not given access to any of the user data or tools that
+the AI agent can access, and it does not attempt to execute the
+user prompt. This prevents the LLM from being exposed to
+data that could contain a prompt injection attack, and so the
+LLM is considered secure. This output is then saved directly
+to an XML file.
+The XML that the LLM generates contains the following
+elements, blocks, nodes, and conditionals. Nodes are individ-
+ual function calls with a list of arguments needed for that call.
+Blocks contain a subset of nodes, and conditionals represent
+an instruction that jumps to blocks depending on a condition.
+This XML is then converted into a state tree of ordered func-
+tion calls. Below is an example of the XML generated for the
+instruction "Read the email with subject ’College Acceptance
+Results’. If accepted, send an email to ammunson@ucsd.edu
+saying ’ I’m so happy’. If not accepted, send a direct message
+to Kevin on Slack with message ’I got rejected :( ’.":
+<Block num="0">
+<Node type="getemailmessageids" num="1">
+<ListArgs count="0">
+</ListArgs>
+</Node>
+<Node type="emailread" num="2">
+<ListArgs count="1">
+<Arg messageID="PLACEHOLDER"/>
+</ListArgs>
+</Node>
+<Cond num="3">
+<Link to="4"/>
+<Link to="6"/>
+</Cond>
+<Block num="4">
+<Node type="emailsend" num="5">
+<ListArgs count="3">
+<Arg recipient="ammunson@ucsd.edu"/>
+<Arg subject="PLACEHOLDER"/>
+<Arg body="I’m so happy"/>
+</ListArgs>
+</Node>
+</Block>
+<Block num="6">
+<Node type="getslackusers" num="7">
+<ListArgs count="0">
+</ListArgs>
+</Node>
+<Node type="slackdirectmessage" num="8">
+<ListArgs count="2">
+<Arg userid="PLACEHOLDER"/>
+<Arg message="I got rejected :("/>
+</ListArgs>
+</Node>
+</Block>
+</Block>
+3.4 Reference Monitor
+Our reference monitor component takes in the LLM’s predic-
+tion and uses it to check the AI agent’s tool usage. It does this
+by tracking the function calls in the generated state tree and
+comparing them against the AI agent’s actions.
+The reference monitor is created from the XML predic-
+tion’s state tree and hooks into the individual tool function
+calls. The reference monitor first parses the XML into a list
+of nodes and their sequence numbers. When encountering a
+block, the parser will be called recursively on that block to
+create a sublist. The state tree then iterates through the list,
+creating subtrees per blocks and linking conditional jumps
+to their related blocks. This creates a tree consisting of only
+function calls, in which functions are linked to one or more
+calls that immediately follow it in the sequence.
+The AI agent can only call functions through the reference
+monitor, which statefully tracks all tool usage and checks
+function calls against the state tree before they are executed.
+If the function call is not the next predicted tool in the state
+tree, the reference monitor will prevent the tool from run-
+ning and will instead stop the AI agent entirely since it has
+been compromised. Thus, at any point in the execution of the
+Agent, the Agent has access to at most 2 separate tools, those
+corresponding to a conditional jump, or only 1, corresponding
+to the next node in a sequence.
+3
+3.5 AI Agent
+Our AI agent uses a different instance of the same large lan-
+guage model that the LLM uses to complete its tasks. It takes
+in its own system prompt that provides the tools it can call,
+the format for calling those functions, and a user prompt for it
+to complete. The agent is allowed to call functions as it deems
+necessary to complete the given instructions. These function
+calls execute one at a time in the order specified by the AI
+Agent. After each function call, the agent reprompts with the
+result of that function call alongside the original prompt and
+system instructions so that it can continue answering the user
+prompt. If the function call is not approved by the reference
+monitor, it returns a null value and the AI agent halts. This
+will stop the agent as soon as it is compromised and deviates
+from the original prompt.
+3.6 Tools
+We provide our AI agent with tools to interact with files,
+Slack, Gmail, and the web. Below are the specific tool actions.
+Files: Read, Write, Append, Create, Delete
+Slack: Send Message, Read Messages, Send Direct Message,
+Get Slack Channels, Get Slack Users, Add Bot to Channel,
+Add User to Channel
+Gmail: Read Email, Send Email, Get Email Ids
+Web: Scrape Url, Crawl Url
+These are tools that allow us to create an AI Agent
+with real world functionality that a user would want. The
+way tools are defined for the LLM and the agent ensure that
+defining more tools for the framework is not notable more
+difficult than adding a new tool to a standard function calling
+agent. For function calls that relied on other function calls,
+we noticed the AI Agent sometimes struggled with knowing
+the order it needed to call them in. For example for sending
+a message to a slack channel, the AI Agent needs to call
+Get Slack Channels first to find the channel id. Sometimes
+the AI Agent wouldn’t know that it had to do this. Adding
+additional explanation of these cases within the AI agent’s
+system prompt proved helpful, but it would be fruitful to
+look into fine-tuning the function descriptions. This is further
+discussed in section 5
+4 Evaluation
+We evaluate the performance of our AccessControl Agent
+based the accuracy of the LLM in generating proper XML
+predictions, the ability of the AI agent to successfully com-
+plete tasks, and the effectiveness of the AccessControl Agent
+in preventing prompt injection attacks.
+4.1 Testing Methodology
+We create an automated python test that takes in the examples
+from a user prompt dataset and runs the AccessControl Agent
+for every prompt. We then manually evaluate both the XML
+prediction and the AI agent response for correctness. Using
+the number of correct and incorrect responses from both the
+LLM’s XML prediction and the AI Agent, we calculate both
+accuracy and the error rate. We collect these metrics to eval-
+uate the performance of the LLM predictions, the AI agent,
+and the two combined (the Access Control Agent as a whole).
+Correctness: This refers to if the LLM or AI agent behaved
+as expected and successfully completed their respective tasks.
+We evaluate this metric manually against a ground truth that
+we determine by hand from the given prompt. Since the mod-
+els are nondeterministic, for some prompts we had cases in
+which the AI Agent would generate different user output while
+still completing the tasks and following the function calls. We
+consider this to be correct.
+For the LLM, the XML generated must be properly for-
+matted and functionally equivalent to our ground truth XML
+to be considered correct. The AI agent component performs
+correctly if it properly executes the prompt without violat-
+ing the reference monitor’s state tree. We check to see if the
+AI agent’s final answer makes sense given the prompt and
+that the proper tool function calls were correctly executed.
+To address the latter, we review the files changed, the emails
+sent and received, and the actions taken in slack alongside
+the logged return values of the function calls. An AI agent
+is incorrect if it does not properly complete the task. In the
+special case of an injection attack, the AI agent is considered
+correct if it prevents that attack even if it does not complete
+all steps in the XML prediction. For the AccessControl Agent
+to be correct (also referred to as both being correct), both the
+LLM and AI agent must have produced correct responses.
+Accuracy: This metric is the rate at which the model com-
+pleted its task successfully. Given that the number of correct
+responses is C and the total number of prompts tested is P,
+accuracy (A) can be represented as:
+A = C
+P
+Error Rate: This is the rate at which the model fails to
+complete its task successfully. If the number of incorrect
+responses is I, the total number of prompts tested is P, and the
+error rate is E, the mathematical representation of the metric
+is as follows:
+E = I
+P
+4.2 Dataset
+We collected a set of 109 sample user prompts to evaluate our
+AccessControl Agent with. These prompts consist of samples
+from AgentDojo [4] and additional prompts that we manually
+4
+generate. We also create the necessary seed information, such
+as populating the email inbox or creating a file for the AI
+agent to delete. When testing using the Llama 3.2 (70B)
+model, we use a smaller subset of prompts due to CUDA
+memory limitations on our computers that caused failures
+with web tools when visiting certain websites.
+These prompts include simple tasks that do not use any
+tools, tasks that call a single tool only a couple of times,
+and complex tasks that use several different tools for varied
+actions. The complex tasks also cover conditional prompts
+that tell the AI Agent to take different actions depending on
+the outcome of one or more of its function calls.
+This dataset includes a smaller subset of adversarial
+prompts that we create by hand. These prompts are tested
+against the specific models we use and verified to inject the
+model when not checked by a reference monitor. Because
+the same injection attacks often do not often work for both
+GPT 4o and Llama 3.2 (70B), the adversarial prompts differ
+between the models during testing.
+4.3 Results
+Table 1 displays the evaluation results of the AccessControl
+Agent when using the Llama 3.2 (70B) model to power the
+LLM and agent compared to its performance with GPT 4o.
+The results show the results for different components in addi-
+tion the success of the AccessControl Agent as a whole (when
+the task is labeled as both in the table).
+With GPT 4o as the underlying model for the AccessCon-
+trol Agent, both the LLM prediction and AI agent components
+perform well. They report accuracies over 90% independently,
+and both components were correct in over 87% of the tests.
+When the AI agent took correct steps but the XML prediction
+was incorrect, this was classified as the LLM being incorrect
+and the AI agent being correct despite not following the XML
+prediction. This impacted the combined correctness of the
+AccessControl Agent. The lower accuracy and higher error
+rate for the combined category also result from the nondeter-
+ministic nature of LLMs and more abstract prompts. Instances
+where the LLM and AI agent disagreed on the order of func-
+tion calls necessary for the prompt, even when both could be
+valid orders, caused the majority of incorrect responses.
+Although the LLM predictions when using Llama 3.2 (70B)
+outperform the combined AccessControl Agent with GPT 4o,
+its AI agent and the combined components perform signif-
+icantly. The model suffers from many of the same issues
+regarding nondeterminism as when using GPT 4o, but the
+XML predicitions also had instances of poor formatting and
+hallucinations that resulted in incorrect responses. The Llama
+model also resulted in incorrect function call formatting from
+the AI agent, which led to several incorrect results.
+In addition to being more accurate, the AccessControl
+Agent using GPT 4o was also significantly faster. A test run
+of 109 prompts takes under an hour, with only 1.503 seconds
+on average needed to generate each of the XML files, while
+the AccessControl Agent using the Llama model was depen-
+dent on the local computer’s hardware and could take over 4
+minutes to generate just the XML prediction.
+The AccessControl Agent performed well with both mod-
+els in preventing prompt injection attacks as shown in table 2.
+In the table, injections caught by the AI Agent are injection
+attacks where the model did not attempt to deviate from its
+task, and so it never had any conflict with the reference mon-
+itor. GPT 4o was more resistant to prompt injection attacks
+than Llama 3.2 (70B), but there were still very simple nat-
+ural language attacks that could compromise the AI agent,
+demonstrating the need to protect against these attacks even
+in advanced models. Injection attacks caught by the reference
+monitor refer to instances where the AI agent was vulnerable
+to the attack and attempted to carry out functions from the
+attack that were unrelated to the user prompt. In these tests,
+however, the reference monitor stopped the AI agent before
+calling the unapproved tools and effectively prevented the
+injection attack. Overall, implementing the framework of the
+AccessControl Agent improves the security of AI assistants
+in the face of prompt injection attacks.
+5 Discussion
+Determining Concrete Granular Access for Abstract
+Tasks:
+For predicting the function calls and the arguments neces-
+sary to complete a task, the LLM struggles with fine-grained
+access when the tasks are abstract or have certain unknown
+values. It cannot properly predict prompts such as "read all
+of my emails" or "go to the slack channel with the message
+"hello" without reading all of the channels because the LLM
+cannot know ahead of time how many emails there are or how
+many channels it must go through to find that message.
+Poor Performance on Bad Models:
+Our AccessControl Agent heavily relies on good perform-
+ing large language models for it to work. However, it is unfea-
+sible to run many of the large language models locally. When
+we substituted with smaller models that run locally(Llama 1B
+and 3B) [6], the LLM and AI Agent often struggle to agree
+on the order and steps required to complete the task, or even
+struggle to properly use the given tools or generate output.
+Often one of the generated sequence of steps may not properly
+work for the prompt.
+Ex: Find a channel with the most users and post there the
+following question: ’Hi, can everybody write me their favorite
+hobby in DM?
+For this prompt, the LLM incorrectly generated the steps of
+Get Slack Channels, Read Messages, Send Message. While
+the AI Agent correctly attempted to call Get Slack Channels,
+Send Message. Even though the AI Agent is correct in this
+case, the reference monitor still stops the AI Agent due to the
+faulty XML State Tree generated by the LLM.
+5
+Model Task Correct Response Incorrect Response Total Prompts Accuracy Error Rate
+Llama 3.2 (70B)
+LLM XML Prediction 57 7 64 89.01% 10.09%
+AI Agent 41 23 64 64.06% 35.94%
+Both 38 26 64 58.46% 41.54%
+GPT 4o
+LLM XML Prediction 103 6 109 94.495% 5.505%
+AI Agent 99 10 109 90.826% 9.174%
+Both 95 14 109 87.16% 12.84%
+Table 1: Accuracy and Error Rate for AccessControl Agent with Llama 3.2(70B) vs GPT 4o
+Model Component Injections Attempted Injections Caught by Component Total Injections Caught
+Llama 3.2 (70B) Reference Monitor 8 7 8
+AI Agent 1
+GPT 4o Reference Monitor 13 3 13
+AI Agent 10
+Table 2: Success in Catching Prompt Injection Attacks using Llama 3.2 (70B) vs GPT 4o
+AI Agents that Replicate User Interaction:
+As mentioned earlier 2.2, our AccessControl Agent did not
+address AI Agents that utilize computer vision or the HTML
+DOM for replicating a user interacting with the computer. For
+our AccessControl Agent to predict a sequence of steps, we
+need to expose it to external data (HTML DOM, screenshot,
+. . . ), which conflicts with the AccessControl security model.
+Some ideas for addressing these types of agents are to break
+the actions of an agent into steps, thus allowing only up to
+a certain degree of steps or tool calls to be generated off the
+given input. Thus the reference monitor restrictions may look
+like constraining the agent to only clicking in a certain region
+of the screen, or only allowing it to interact with buttons that
+contain certain key words that are related to the user prompt.
+6 Future Work
+Future research could examine the impact of giving the AI
+agent the XML prediction generated by the LLM alongside
+the user prompt to further limit successful prompt injection
+attacks and any disconnect between the LLM and AI agent.
+There is also open work in applying this research to HTML
+DOM or computer vision agents that can interact with a sys-
+tem or webpage by clicking like a user would. There is ad-
+ditional future work in evaluating the performance of this
+AccessControl Agent with more advanced models such as o1
+preview and o1 mini, both of which will likely outperform
+GPT 4o but are still beta models. Finally, future work may
+also include applying this framework to existing AI assistants
+in industry use.
+7 Related Work
+This section discusses related work to securing AI Agents.
+The company Lakera AI builds and maintains a prod-
+uct Lakera Guard focused on protecting AI Agents from
+many types of attacks, including prompt injection attacks [2].
+However, their approach is different from our AccessControl
+Agent’s approach. Lakera Guard works by sanitizing all input
+and output to the LLM. They attempt to remove prompt at-
+tacks, personally identifiable information, offensive, hateful,
+& sexual content, and unknown links in their sanitization.
+Our AccessControl Agent takes a more fine grained ap-
+proach and does not restrict the data that the AI Agent has
+access to. We do not filter emails, slack messages, and such.
+We allow the AI Agent to function as normal, except that
+we enforce that it follows the user prompt and that it does
+not get sidetracked after being exposed to external data while
+function calling.
+8 Conclusion
+As AI agents rise in popularity, there is a growing need to
+protect users from attacks such as prompt injection, which
+are easy to orchestrate even with minimal knowledge. Cur-
+rent AI agents are very vulnerable to these attacks as they
+struggle to differentiate data from user prompts, and a simple
+statement within an email can compromise the agent. Our
+AccessControl Agent uses a separate LLM instance without
+any access to tools or user data to generate a prediciton of
+the actions the AI agent must take, and then our reference
+monitor uses these predictions to prevent the AI agent from
+accessing tools it does not need for the original prompt. Our
+work demonstrates the efficacy of using these predictions and
+the reference monitor to limit the permissions of AI agents
+in regard to tool usage and user data. Our evaluation demon-
+strates that this effectively prevents prompt injection attacks
+without massively compromising the abilities of the agent
+when using advanced models like GPT 4o.
+6
+References
+[1] https://aiagentsdirectory.com/landscape.
+[2] Lakera AI. Introduction to lakera guard. https://
+platform.lakera.ai/docs.
+[3] Meta AI. Llama 3.2-1B on Hugging Face. 2024. https:
+//huggingface.co/meta-llama/Llama-3.2-1B.
+[4] Mislav Balunovi´c-Luca Beurer-Kellner Marc Fischer Flo-
+rian Tramèr Edoardo Debenedetti, Jie Zhang. AgentDojo:
+A Dynamic Environment to Evaluate Prompt Injection
+Attacks and Defenses for LLM Agents. 3.00 edition, 2024.
+https://arxiv.org/abs/2406.13352.
+[5] Mateo Rojas-Carulla Sam Watts Eric Allen Elliot Ward,
+Rory McNamara. Agent Hijacking: The True Impact of
+Prompt Injection Attacks. 1.00 edition, 2024. https:
+//snyk.io/blog/agent-hijacking/.
+[6] Meta. Llama 3.2 connect.
+https://ai.meta.com/blog/
+llama-3-2-connect-2024-vision-edge-mobile-devices/.
+[7] OpenAI. Models. 2024. https://platform.openai.
+com/docs/models/gpt-4o.
+[8] Saeed Mahloujifar-Kamalika Chaudhuri Chuan Guo
+Sizhe Chen, Arman Zharmagambetov. Aligning LLMs to
+Be Robust Against Prompt Injection. 1.00 edition, 2024.
+https://arxiv.org/abs/2406.13352.
+Appendix
+A Individual Contributions
+Amy: Amy wrote the code to automate running the tests,
+parse the LLM responses into an XML file, and implement
+gmail API calls. She implemented OpenAI GPT 4o API. She
+also debugged the AccessControl Agent as a whole alongside
+Alex and prompt engineered the system prompts for the LLM
+and AI agent from the base prompt. Amy generated the user
+prompt dataset with Kevin. She additionally ran the tests that
+used GPT 4o and analyzed the results with Kevin. Amy also
+contributed heavily to the creation of the presentations and
+final paper.
+Kevin: Kevin implemented the function calls for Slack,
+web tools (scraping and crawling), and file systems (read,
+write, delete, etc.). He helped in generating the user prompt
+dataset and collected the samples from the AgentDojo user
+prompts. He also helped in evaluating results and contributed
+significantly to the final presentation and paper.
+Alex: Alex created the reference monitor, integrated it with
+the AI agent, and wrote the code that converts the XML file
+into a state tree for that reference monitor. He also assisted
+in prompt engineering the LLM and determining the XML
+formatting and definition. He also filmed the user demo of the
+AccessControl Agent, presented the final results, assisted with
+creating deliverables, and did a large portion of the debugging.
+Ashwin: Ashwin created the initial base prompts for the
+AI agent and LLM. He also implemented the Llama 3.2 (70B)
+model and ran the tests with the Llama agent on his computer.
+7
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CSE 221 Project - Fall 2025
+Alex Asch
+aasch@ucsd.edu, A69033251
+Aaron Wu
+aaw005@ucsd.edu, A16369174
+Sneha De
+snde@ucsd.edu, A17282520
+1 Introduction
+The objective of our project is to create a set of benchmarks
+to characterize and measure various aspects of our target oper-
+ating system, including CPU operations, memory operations,
+networking, and file operations.
+Our targeted operating system is Ubuntu 24.04.03, a Linux
+distribution known for its reliability and ease-of-use. We
+chose Ubuntu as our OS to benchmark because of our familiar-
+ity with well-established UNIX tooling. While our individual
+setups vary, for the most accurate results, our report is based
+on a bare-metal, dual-booted installation of Ubuntu Desktop
+to minimize unknown overheads of virtualization or emula-
+tion. More detailed specifications of our chosen machine are
+listed in section 2.
+We split the implementation of the experiments as follows:
+Benchmark Contributors
+CPU - Measurement overhead Sneha
+CPU - Procedure call overhead Aaron
+CPU - System call overhead Alex
+CPU - Task creation time Aaron
+CPU - Context switch time Alex, Sneha
+Memory - Access time Sneha, Alex
+Memory - Bandwidth Aaron, Alex
+Memory - Page fault service time Aaron
+Network - Round trip time Alex
+Network - Peak bandwidth Alex
+Network - Connection overhead Alex
+File system - Size of file cache Aaron, Sneha
+File system - File read time Sneha
+File system - Remote file read time Sneha
+File system - Contention Aaron
+Our benchmark suite is written in C with gcc version 13.3.0
+as our compiler, using the following compiler flags: CFLAGS
+= -Wall -Wextra -pedantic -O0. We use the -O0 flag
+to disable all compiler optimizations to stay accurate to our
+original code.
+We estimate the total number of hours spent on this project
+to be 75 hours summed up.
+Our source code can be found on the provided GitHub
+repository.
+2 Machine Description
+The machine we used to run the experiments had these speci-
+fications:
+1. Processor: 12th Gen Intel(R) Core(TM) i7-1250U
+From the output of lscpu:
+(a) Number of cores: 10
+(b) L1 (data) Cache Size: 352 KiB (10 instances) →
+≈ 35 KiB per core
+(c) L1 (instruction) Cache Size: 576 KiB (10 in-
+stances) → ≈ 58 KiB per core
+(d) L2 Cache Size: 6.5 MiB (4 instances) → ≈ 1.625
+MiB shared per group of four cores
+(e) L3 Cache Size: 12 MiB (1 instance)
+We run our benchmarks on the CPU with id 0 by using
+taskset -c 0, with an estimated CPI of 1.2769 and
+constant TSC clock speed of 1881.600 MHz, which dif-
+fers from the max boost clock speed which is 4700MHz.
+Since we utilize the TSC register for all measurements,
+we use 1881.600MHz, which means a cycle time of
+0.5315 nanoseconds.
+Cycle time = 1
+Freq. = 1
+1881.600 × 106 Hz = 0.5315 ns
+2. Memory: From the output of lshw
+(a) DRAM Type: DDR4
+(b) Clock: 4267 MHz
+(c) Capacity: 16 GiB
+(d) Width: 64 bits (8 bytes)
+(e) Channels (banks): 2 x 8GiB
+(f) Cache line size: 64 bytes
+Obtained via:
+getconf LEVEL1_DCACHE_LINESIZE
+1
+3. Memory bus bandwidth: A theoretical memory band-
+width can be calculated with [6]:
+Bandwidth = Clock Speed × Width × Channels
+= 4267 MHz × 8 bytes × 2
+= 4267 × 106
+s × 8 bytes × 2
+= 68, 272 × 106 = 68.272 × 103 × 106
+≈ 68 GB/s
+The theoretical memory bandwidth is therefore 68 GB/s.
+4. I/O
+(a) Bus Type: PCI Express (PCIe)
+(b) Bandwidth: 32 bits (4 bytes per cycle)
+(c) Clock speed: 33 MHz
+5. Disk: [5]
+(a) Type: NVMe
+(b) Model: SAMSUNG MZVLQ1T0HBLB-00BH1
+(c) Capacity: 1 TB
+(d) Sequential Read: 2,366 MBytes/Sec
+(e) Sequential Write: 955 MBytes/Sec
+(f) Random seek RW: 821 MBytes/Sec
+(g) IOPS: 52 MBytes/Sec
+(h) The above specifications are from a benchmark-
+ing platform, as we were unable to find complete
+product info for the specific product listed, likely
+because it is manufacturer supply only, and not
+sold standalone to consumers.
+The closest rated specifications we could find
+were for the MZVLQ1T0HBLB-00B00 (different
+SKU):
+i. Sequential Read: 3,100 MB/s, 380000 IOPS
+ii. Sequential Write: 2,000 MB/s 330000 IOPS
+6. Network card:
+(a) Model: Intel Alder Lake-P PCH CNVi WiFi
+(b) Bandwidth: 1.1342 Gb/s
+7. Operating system: Ubuntu 24.04.03
+3 CPU, Scheduling, and OS Services
+3.1 Timing overhead
+CPUs maintain a timestamp register that can be used to bench-
+mark the number of cycles that an operation takes on the
+processor. The most basic instruction is RDTSC, Read Time-
+Stamp Counter, and RDTSCP, which in addition reads the pro-
+cessor’s ID. The latter instruction is used as a way to serialize
+the reading of the timestamp and ensure that all previous
+instructions have been completed in full before reading the
+timestamp [9].
+Additionally, Paoloni [9] suggests guarding these instruc-
+tions with the CPUID instruction, which is another forcibly
+serialized operation to prevent pipeline pollution before and
+after our target code and timestamp instructions are running.
+By guarding measurements with this instruction, we get a
+common boilerplate for measuring time:
+1 asm volatile("CPUID\n\t"
+2 "RDTSC\n\t"
+3 "mov %%edx, %0\n\t"
+4 "mov %%eax, %1\n\t"
+5 : "=r"(start_high),
+"=r"(start_low)::"%rax", "%rbx",
+"%rcx", "%rdx");
+,→
+,→
+6
+7 // measure something here
+8
+9 asm volatile("RDTSCP\n\t"
+10 "mov %%edx, %0\n\t"
+11 "mov %%eax, %1\n\t"
+12 "CPUID\n\t"
+13 : "=r"(end_high),
+14 "=r"(end_low)::"%rax", "%rbx", "%rcx",
+"%rdx");,→
+15
+16 start = ((uint64_t)start_high << 32) | start_low;
+17 end = ((uint64_t)end_high << 32) | end_low;
+18
+19 uint64_t time = end - start;
+As Paoloni describes, this empty block measure the over-
+head of these instructions itself. Often times, these instruc-
+tions are repeated before an actual measurement is taken to
+warm the instruction cache and prevent over-fluctuations.
+3.1.1 Overall Prediction of Performance
+Looking at the code for the timing overhead described by
+Paoloni, it is about 15 instructions, and we have about 1.27
+CPI, thus we should be at approximately 19.1535 cycles
+for measurement or about ≈ 10.1801 ns given our 0.5315
+ns/cycle.
+3.1.2 Measurement Methodology
+We use the same setup as Paoloni explained above without
+anything inside the loop to measure. We experiemented with
+adding a NOP operation, ;, which places in a mov, but did
+not see any changes in our results and therefore opted to stay
+faithful to Paoloni’s implementation.
+2
+We use the measurement methodology described in 3.1.3
+with no changes.
+3.1.3 Taking measurements
+As we employ a similar measurement technique in most of
+our benchmarks, we consolidate the information here and
+mention when any deviations are made.
+The boilerpate timing method shown in section 3.1 is
+wrapped around a loop that runs, by default, 1,000,000 it-
+erations. We call each loop of 1,000,000 a trial,
+Each measurement is conducted for ten trials to take the
+standard deviation and average across these trials.
+We occasionally change the number of iterations conducted
+per trial if loops or other types of iteration are being done
+within the code being measured, so we have a similar count
+of iterations being done for each.
+3.1.4 Results
+See table 1 for the results of this benchmark.
+The average cycles being very close to 15 instructions
+means our system is performing consistently with our esti-
+mates without any additional overhead or instruction transla-
+tion occuring. This gives us confidence in our measurements
+n the target machine as our virtualization and emulation en-
+vironments used for development purposes showed different
+overheads, probably due to trapping into a hypervisor to ac-
+cess these low-level registers.
+Avg. Cycles StdDev Cycles Latency (ns)
+15.4071 0.2226 8.1887
+Table 1: Results for timing overhead
+3.2 Loop overhead
+3.2.1 Overall Prediction of Performance
+In Paoloni’s white paper [9], a nested loop structure is tested
+with an increasing maximum iteration size to validate the
+resolution of RDTSC being able to capture a single assembly
+instruction. Indeed, the timing of the loop increased roughly
+by 1 over time. We therefore estimated a similar 0-1 cycles
+for the overhead of a loop which includes its initialization,
+comparison, and increment.
+3.2.2 Measurement Methodology
+Instead of doing the nested structure of a measurement in-
+side the looping described in section 3.1.3, we increment the
+number of loops to 100,000,000 iterations and do an arbitrary
+instruction within the loop so there is enough resolution to
+capture by timestamping:
+1 for (int i = 0; i < NUM_LOOPS; i++) {
+2 (*dummy_ptr) = 1;
+3 }
+Looking at the code for the loop, it is about 5 instructions
+and multiplied with our estimated 1.27 CPI we get approxi-
+mately 6.3845 cycles. We therefore adjusted our estimate to
+be roughly 6 cycles or 3.1989 ns given our method.
+3.2.3 Results
+See table 2 for the results of this benchmark.
+The results being close to one cycle matches our estimates
+and what Paoloni found. We believe there is some amortiza-
+tion or other latency hiding over the loops that cause the real
+average to appear less than a whole number, but this is not a
+cause for concern as it is not fully off from 1.
+Avg. Cycles StdDev Cycles Latency (ns)
+0.9337 0.0317 0.4963
+Table 2: Results for looping overhead
+3.3 Procedure call overhead
+3.3.1 Overall Prediction of Performance
+To estimate software overhead, we the took the objdump of
+our benchmark binary and counted how many instructions
+each procedure call required. We then multiplied our instruc-
+tion count with our estimated CPI of 1.2769 to get our estimate
+cycles in table 3.
+We estimate that each additional argument that adds about
+three instructions means a jump of relatively 3.8307 cycles or
+0.9902 ns.
+# Args Instr. Count Est. Cycles Est. Latency (ns)
+0 6 7.6614 4.0720
+1 7 8.9383 4.7507
+2 10 12.769 6.7867
+3 13 16.5997 8.8227
+4 16 20.4304 10.8588
+5 19 24.2611 12.8948
+6 22 28.0918 14.9308
+7 24 30.6456 16.2881
+Table 3: Estimates for procedure calls with arguments. In-
+struction count gathered from objdump
+.
+The following is the assembly dump from our benchmark,
+explained in the next section.
+1 0000000000402a84 <procedure_test_zero_arg>:
+3
+2 402a84: f3 0f 1e fa endbr64
+3 402a88: 55 push %rbp
+4 402a89: 48 89 e5 mov %rsp,%rbp
+5 ; no arguments are passed in here
+6 402a8c: b8 00 00 00 00 mov $0x0,%eax
+7 402a91: 5d pop %rbp
+8 402a92: c3 ret
+9
+10 0000000000402a93 <procedure_test_one_arg>:
+11 402a93: f3 0f 1e fa endbr64
+12 402a97: 55 push %rbp
+13 402a98: 48 89 e5 mov %rsp,%rbp
+14 ; one argument passed
+15 402a9b: 89 7d fc mov %edi,-0x4(%rbp)
+16 402a9e: 8b 45 fc mov -0x4(%rbp),%eax
+17 402aa1: 5d pop %rbp
+18 402aa2: c3 ret
+19
+20 0000000000402aa3 <procedure_test_two_arg>:
+21 402aa3: f3 0f 1e fa endbr64
+22 402aa7: 55 push %rbp
+23 402aa8: 48 89 e5 mov %rsp,%rbp
+24 ; two arguments passed
+25 402aab: 89 7d fc mov %edi,-0x4(%rbp)
+26 402aae: 89 75 f8 mov %esi,-0x8(%rbp)
+27 402ab1: 8b 55 fc mov -0x4(%rbp),%edx
+28 402ab4: 8b 45 f8 mov -0x8(%rbp),%eax
+29 402ab7: 01 d0 add %edx,%eax
+30 402ab9: 5d pop %rbp
+31 402aba: c3 ret
+3.3.2 Measurement Methodology
+For each number of arguemnts, 0-7, we defined a function
+and call it repeatedly in the inner loop of the boilerplate in
+3.1.3.
+As the previous objdump shows, we confirmed that even
+with a trivial function, the call was not optimized away and
+instructions were added.
+To ensure this, we also added arguments together when
+possible to add more work to the function, else it would be
+amortized away through the numerous loops not yielding any
+substantial numbers.
+1 int procedure_test_two_arg(int a, int b) {
+2 return a + b;
+3 }
+3.3.3 Results
+See table 4 for the results.
+Our estimate was slightly too high, and we see that each
+additoinal argument adds roughtly ≈ 0.6 ns.
+Our results are monotonically increasing with the number
+of arguments passed in as we expected. Our low cycle count
+may stem from the way we average out our total measured
+time, and perhaps some amortization from the procedure
+being cached within the instruction cache. These could mask
+latency after several iterations that creates a low average.
+The instructions that make up the procedures are releatively
+simple and might have require less cycles than the instruc-
+tions used for our CPI estimate. Due to this, our prediction
+of performance might be overpredicting the impact of each
+additional instruction.
+# Args Avg.
+Cycles
+StdDev
+Cycles
+Latency (ns)
+0 0.9589 0.0197 0.5097
+1 1.2971 0.0200 0.6894
+2 1.5398 0.0161 0.8184
+3 1.8196 0.0186 0.9671
+4 2.0670 0.0150 1.0986
+5 2.2247 0.0091 1.1824
+6 2.5476 0.0112 1.3540
+7 2.7040 0.0063 1.4372
+Table 4: Cycle counts for procedure calls with arguments
+3.4 System call overhead
+3.4.1 Overall Prediction of Performance
+The cost of a system call is much higher than the cost of a pro-
+cedure call, since we need to mode switch into the kernel/ring
+0, and back, for each system call. This requires a mode switch,
+which is noted to take around 100 cycles on X86. Thus, our
+estimate should include the time for a procedure call plus two
+mode switches: 200 + 7.6 (our estimated for zero argument
+call) for ≈ 207.6 cycles, ≈ 110.3394 ns.
+3.4.2 Measurement Methodology
+We use lmbench’s method of invoking a write() call to
+/dev/null as the authors describe it as a “nontrivial entry
+into the system” [7] does not have any special optimizations
+compared to other system calls.
+We use the boilerplate in 3.1.3 with write() invoked inside
+the loop repeatedly.
+1 for (int i = 0; i < DEFAULT_NUM_LOOPS; i++) {
+2 write(dnfd, "", 0);
+3 }
+3.4.3 Results
+See table 5 for results.
+Our estimate overshot the actual results but was correct
+in terms of magnitude; perhaps the cost of a mode switch is
+lower than what we expect.
+A system call taking more than a hundred cycles is un-
+derstandable due to the amount of work that must be done
+before the OS gains control. It is evident how this overhead
+can drastically increase the latency of a workload if there are
+frequent system calls being made.
+Avg. Cycles StdDev Cycles Latency (ns)
+139.5415 0.1796 74.1663
+Table 5: Results for system call overhead
+4
+3.5 Task creation time
+3.5.1 Overall Prediction of Performance
+A kernel thread time to create and run should be much cheaper
+than a process’s time to create and run. To create a process,
+a process needs to get its own virtual address space, page
+tables, file descriptor table. In contrast, a kernel thread needs
+a thread control block (few pointers and register values) and
+a kernel stack which is less costly compared to the process’s
+creation requirements. The creation of a kernel thread
+The lmbench paper’s measurement of process create and
+run (fork and exit) is done on a Linuxi686@167Mhz envi-
+ronment which is 1881.600/167 = 11.27 times slower than
+the processor we are testing on. Their resulting measurement
+was 0.4ms for fork and exit. This translates to about 400000
+nanoseconds, thus we esitmate:
+400000ns
+11.27 (speedup) = 35492.4579ns
+The creation of a kernel thread requires the creation of a
+new stack, and save and restore of program counter and stack
+pointer registers. This is much lighter than a process fork.
+Thus we estimate the kernel thread taking about half of the
+process creation time.
+• Kernel thread: 17746.2289 ns
+• User process: 35492.4579 ns
+3.5.2 Measurement Methodology
+For measuring the time to create and run a kernel thread,
+we used pthread_create(&thread, NULL, enter, "test
+thread") to create a kernel thread. The start routine, enter
+returns NULL when called to exit the thread. To check if the
+thread has finished running, we call pthread_join(thread,
+NULL) which returns immediately when a thread is finished
+running. We run this with our timing setup shown in section
+3.1 and over 10000 iterations.
+For measuring the time to create and run a process we
+followed MvVoy’s lmbench process measurement method. In
+MvVoy’s lmbench paper [7], they measure process creation
+by using a combination of fork() for creation and wait() to
+block until the child exits. [7]. We used the same method to
+measure the time to create and run a process. We used the
+same timing setup shown in section 3.1 for this measurement
+and iterated over 100 iterations.
+3.5.3 Results
+See table 6 for results on task creation.
+Our estimate for kernel threads was nearly double the actual
+result, while our estimate for user processes was slightly lower.
+However, the standard deviation for these measurements may
+explain some of the difference for the latter.
+Our prediction for kernel threads being lighter to create than
+a user process is consistent and validates our measurements.
+Avg.
+Cycles
+StdDev
+Cycles
+Latency
+(ns)
+Kernel thread 15929.3053 222.5187 8466.4258
+User process 80533.1470 8217.7287 42803.3676
+Table 6: Results for task creation times
+3.6 Context switch time
+3.6.1 Overall Prediction of Performance
+A process-to-process context switch should be much more
+expensive than one kernel thread to another. To context switch,
+the OS needs to save the state of the running process, and
+restore the context of the swapped process. This call should
+be much more expensive than any other runs, considering the
+TLB flush means there is a TLB miss caused for every later
+memory access.
+In contrast, a kernel thread context switch occurs within
+the same address space in the kernel, so there is less memory
+movement or saving. Only a few registers for the program
+counter and stack pointer would need to be saved.
+The lmbench paper measures context switches on a Linux
+i686@167Mhz environment which is 1881.600/167 = 11.27
+times slower than the processor we are testing on. A (user)
+process-to-process with size 32KB context switch took about
+18 microseconds (18,000 ns).
+18000ns
+11.27 (speedup) = 1597.1606ns
+If we assume that a kernel thread-to-thread context switch
+is about half of this, we estimate:
+• User process-to-process = 1597.1606 ns
+• Kernel thread-to-thread = 798.5803 ns
+3.6.2 Measurement Methodology
+We model our benchmark similar to the cswitch benchmark
+in lmbench [8] which utilizes inter-process pipes to communi-
+cate and synchronize between processes/threads. The pipe
+system call generates a virtual file-descriptor from an integer
+buffer which can then be used as stdin and stdout descrip-
+tors to interact with.
+We use a “flip-flop” approach where two pipes are used
+such that a process is a producer (writing a byte) to one pipe
+while being a consumer (reading a byte) from the other pipe.
+With two such processes, we essentially create a back-and-
+forth pattern of unblocking the other thread with a write while
+getting blocked on a read.
+5
+Our implementation times the write that will unblock the
+other thread, getting blocked upon a read, the context switch
+(control given to the scheduler and then restoring state of the
+other), and continuing execution within the other process.
+To prevent deadlock, we must ensure both processes are
+not doing the operations in the read-write order, otherwise
+there could be a time where both processes are blocked on
+a read for a byte that is never arriving. Conversely, if both
+processes are doing a write-read order, then the processes
+will be unblocked far too quickly for the benchmark to make
+sense. Therefore, we must keep the two processes in opposite
+operation order to prevent either.
+We call a write-read process a produce-first process and a
+read-write process a consume-first thread. The produce-first
+thread will always start the back-and-forth sequence upon its
+first write.
+1 // Process or thread 1: produce-first
+2 write(A_stdout, buf, 1);
+3 read(B_stdin, buf, 1);
+4
+5 // Process or thread 2: consume-first
+6 read(A_stdin, buf, 1);
+7 write(B_stdout, buf, 1);
+We use the boilerplate measurement code from 3.1.3. The
+number of loops corresponds for how many iterations of this
+sequence we execute before it is kill()/pthread_join().
+User-level processes are created through fork(), and the
+inner body of the time-measuring loop checks the process ID
+of the two processes to execute either the produce-first versus
+consume-first code.
+1 if (pid == 0) { // Producer-first code
+2 write(filedes_A[1], buf2, 1);
+3 read(filedes_B[0], buf2, 1);
+4 } else { // Consumer-first code
+5 read(filedes_A[0], buf, 1);
+6 write(filedes_B[1], buf, 1);
+7 }
+Kernel-level threads are created through the POSIX library
+API, pthread_create, and time-stamping code is moved
+into the execution of the produce-first thread and is returned
+via a pointer upon pthread_join. The loop body is present
+in both threads, and the flipped operation order ensures that
+all iterations will be fulfilled without deadlock.
+3.6.3 Results
+See table 7 for the resulting times.
+When subtracting the overhead for pipe operations, we
+arrive at 586.8521 ns for the kernel threads measurement
+761.8344 ns for the user processes. Our estimate for ker-
+nel threads was below the actual while our estimate for user
+processes was accurate.
+Additionally, our claim for kernel threads having lower
+context switch times is supported by our results. Overall,
+these figures support our methodology being accurate and
+consistent.
+Avg.
+Cycles
+StdDev
+Cycles
+Latency
+(ns)
+Pipe overhead 1089.6857 1.9357 579.1649
+Kernel threads 3359.9068 1.0581 1785.7905
+User processes 4036.8210 4.0732 2145.5704
+Table 7: Results for context switch times
+4 Memory
+4.1 RAM access time
+4.1.1 Overall Prediction of Performance
+Base hardware performance: Our CPU id 0 has a clock rate
+of roughly 3.9 GHz, which is 21 times faster than the DEC
+Alpha@182 MHz that lmbench measured. By scaling down
+their reported times, we estimate:
+1. L1 hit time: 0.4762 ns
+2. L2 hit time: 2.3810 ns
+3. L3 hit time: 10 ns
+The processor in the lmbench paper did not have an L3
+cache, so this estimate is derived from the 5x difference
+from 0.4762 ns to 2.3810 ns.
+4. Main memory hit time: 35 ns
+Since we have another level of cache, we estimate the
+main memory access to instead be a factor of 10x faster
+than the processor in lmbench.
+Software overhead: The code that makes the memory ac-
+cess is one load instruction: ptr = *ptr;. We measure
+the software overhead to therefore be about five cycles, or
+0.5315 × 5 = 2.6575 ns.
+Summing the estimates in the previous two sections:
+1. L1 cache (35 KiB ≈ 215 B) : 3.1337 ns
+2. L2 cache (1.625 MiB ≈ 220 B): 5.0385 ns
+3. L3 cache (12MB ≈ 223 B): 12.6575 ns
+4. Main memory (16GB ≈ 234 B): 37.6575 ns
+6
+4.1.2 Measurement Methodology
+For measuring memory and cache access time, lmbench em-
+ployees a linked list approach where a number of traversals
+are done on a variable-sized array and strides: how many
+elements forward does the current index reference. However,
+today caches can optimize accesses when doing a fixed-length
+stride and prefetch or rearrange instructions, leading to inac-
+curate results on modern processors.
+While we employ a similar "pointer chasing" mechanism,
+we use randomized strides so that the compiler cannot pre-
+dict where an element points to. For array sizes n ∈ {2x|x ∈
+[10, 30]} of uint64_t elements (4 bytes each), and for each
+index k in the array, we randomly shuffle the array using the
+Fisher-Yates algorithm (see section 4.1.3). Then, we make
+another array of the same size and set each index i to contain
+the address of the index array element in front of it. That is:
+1 uint64_t indexes[n] = ( array of randomized integers
+corresponding to valid indices [0, n - 1] );,→
+2
+3 uint64_t *arr = ( array of pointers to the elements
+of indexes );,→
+4
+5 arr[i] = &arr[ indexes[i + 1] ];
+In one iteration, we set a volatile uint64_t* ptr to the
+first element, arr[0], and then conduct the following loop to
+"pointer chase" through the array, accessing random indices
+and triggering cache misses:
+1 ptr = arr[0];
+2 for (int j = 0; j < ARR_ACCESSES; j++) {
+3 ptr = (uintptr_t *) *ptr;
+4 }
+Since the indices and therefore addresses are randomized,
+this eliminates the potential for the CPU to do any sort of
+prefetching that would make array accesses and dereferences
+seem faster than they should be.
+ARR_ACCCESSES is set to 10,000,000 iterations, and we
+employ the measurement methodology described in section
+3.1.3, but set the number of measurement loops to ten while
+keeping the same number of trials.
+4.1.3 On Randomness
+The Fisher-Yates algorithm [13] for pseudo-randomly shuf-
+fling an array guarantees that all indices will be referenced in
+the final array. The algorithm runs in O(n) time complexity.
+For every index i ∈ {0, n − 1}, an index j ∈ {0, i − 1} is
+randomly selected to swap into index i, then i is decremented.
+In pseudocode:
+1 for j = n - 1, decrement to 0
+2 pick j from [0, i - 1]
+3 swap(j, i)
+Since any i is not referenced again, this guarantees the
+"safety” of the element not being obstructed or removed in
+the future. Every index is selected once, and only once, so all
+of the original elements will be placed without loss.
+We implement Fisher-Yates as a utility function due to it
+being used in many of our benchmarks. It takes in an array
+of void *, taking in the size of the elements in the array to
+properly swap elements through memcpy.
+4.1.4 Results
+See figure 1 for the plot of latency in nanoseconds against
+array sizes, and table 8 for the raw data. The summary of our
+estimated latency for each of the memory levels is in table 9.
+Our estimates overestimated the latency of the L1 cache
+while underestimating the lower caches. Overestimating the
+L1 cache is potentially due to use of registers or other opti-
+mizations done by the CPU. Once we leave the realm of CPU
+cache, the cost of accessing main memory increases rapidly
+as expected.
+The L3 cache is subtle to detect due to it being shared
+across all the cores in newer Intel processors. While we ran
+the benchmark pinned to one CPU, the jump between L3
+cache and main memory is not as sharp as what is seen in
+lmbench but the steep rise around 224 and after shows the data
+spilling into main memory.
+From the known sizes of each level in section 2 and the
+curve, we see the transitions for each level at:
+1. L1 → L2: 215 B
+2. L2 → L3: 220 B
+3. L3 → Main memory: Unclear, mostly after 224.
+4.2 RAM bandwidth
+4.2.1 Overall prediction of performance
+From the section 2, we see that our theoretical memory band-
+width is at 68 GB/s. For read speed, we predict minimal
+overhead, thus we expect a figure nearing 68 GB/s. For write
+speeds, we expect more overhead, since there will be cache
+write back and invalidation for each write, and DRAM ar-
+chitecture is generally prioritized for read. Thus, we expect
+write bandwidth to be slightly lower than read. Thus, we
+expect our actual benchmark to be somewhat lower than the
+real bandwidth, at around 50 GB/s.
+4.2.2 Measurement Methodology
+To measure memory bandwidth for reads, we used
+posix_memalign to ensure each read we make is within one
+cache line, to prevent overhead from reading across cache-
+lines, and doubling our latency. We also ensure to set the
+7
+212 216 220 224 228 232
+0
+20
+40
+60
+80
+100
+120
+L1 Cache L2 Cache
+L3 Cache
+Main Memory
+Array size (bytes)
+Average latency (ns)
+Figure 1: Graph of average memory access latency against
+the size of the array accessed in bytes.
+total allocated memory to be 1GB, larger than the L3 cache
+as defined in 2, by having be much larger than the L3 size, we
+can ensure the latency of the test is dominated by DRAM read.
+We unroll the inner memory loop to read 8 at a time, similar
+to the lmbench methodology, such that a constant offset is
+used, and we incur a load and add for each word. The bench-
+mark methodology for write bandwidth is the same as above,
+except instead of accumulating and adding values from our
+byte buffer, we store to it using local dummy variables.
+We found that with the above benchmarks on a single
+thread, we were not able to sufficiently saturate the mem-
+ory, thus leading to falsely low values bandwidth. Thus, we
+spawned 2 threads, each performing the above read and ac-
+cumulate/write loop, and used the combined values as the
+memory bandwidth.
+We utilize the same benchmark boilerplate as in 3.1.3.
+4.2.3 Results
+See the benchmark’s results in table 11. The calculation to
+obtain the bandwidth in GB/s are as follows:
+# Bytes Avg. Cycles StdDev Cycles Latency (ns)
+212 2.7510 0.1823 1.4622
+213 2.5718 0.2122 1.3669
+214 2.6685 0.2291 1.4183
+215 3.3549 0.0587 1.7831
+216 4.8467 0.0684 2.5760
+217 5.6398 0.0675 2.9978
+218 6.6601 0.0486 3.5398
+219 8.6428 0.0504 4.5936
+220 15.5498 0.0383 8.2647
+221 20.6528 0.0481 10.9770
+222 28.1333 0.1567 14.9528
+223 80.6306 0.3845 42.8552
+224 145.4963 0.3906 77.3313
+225 179.0189 0.3961 95.1485
+226 196.3394 0.2029 104.3544
+227 207.4733 0.2302 110.2721
+228 215.5087 0.3039 114.5429
+229 221.7692 0.3299 117.8703
+230 226.2648 0.4286 120.2597
+Table 8: Data from memory access measurements
+Cache Level Size (bytes) Latency (ns)
+L1 Cache 215 ≈ 1.5 - 2
+L2 Cache 220 ≈ 2.5-5
+L3 Cache ≈ 223 40 <
+Main Memory 234 110 <
+Table 9: Summary of memory access times
+1 byte
+0.0832 cycles × 1GB
+230B × 1 cycle
+0.5315ns × 109ns
+1s = 21.0607 GB/s (R)
+1 byte
+0.1141 cycles × 1GB
+230B × 1 cycle
+0.5315ns × 109ns
+1s = 15.3572 GB/s (W)
+Therefore, our measured bandwidths are:
+• 21.0607 GB/s for reads
+• 15.3572 GB/s for writes
+Our measured results are about three times smaller than
+our estimates and the theoretical bandwidth. This could be
+due to other system load that is out of our control, software
+pipelining or context switches that occupy the memory bus
+in other ways, or simply degradation of hardware from use.
+Since our measurements seem reasonable for a system of this
+caliber, we believe our benchmark methods to be correct.
+8
+# Processes Avg.
+Cycles/byte
+StdDev
+Cycles/byte
+Latency/byte
+(ns)
+Read 0.0832 0.0083 0.0442
+Write 0.1141 0.0154 0.6064
+Table 10: Results of estimating cycles for bytes.
+Table 11: Results from the memory bandwidth benchmark.
+Each row represents a trial.
+4.3 Page fault Service Time
+4.3.1 Overall Prediction of Performance
+The cost of page faulting will be dominated by disk read time.
+Hence, we’re basing our estimate around the estimated disk
+read time for a page in our system (4KB). In our test machine,
+our NVMe’s IOPS for 4KB with queue depth of 1 is around
+53 Mbytes/sec. We’re using this metric to estimate a page
+fault because its 4KB size matches our machine’s page size
+and a queue depth of 1 makes it synchronous to match our
+testing workload. We can then find the latency for one 4KB
+chunk through the calculations below:
+52 ∗ 106 bytes
+1 sec ∗ 1
+4096 bytes = 12695.3125 4KB ops/ sec
+1/12695.3125 = 0.00007876923 sec = 78.76923μs
+Therefore, our prediction for a page fault is ≈ 78.76923μs.
+4.3.2 Measurement Methodology
+To measure page faults, we used getrusage() to track
+whether we’re hard faulting or soft faulting. The kernel
+may have loaded in pages in memory prior so to make
+sure that we’re not reading from memory we evict pages
+pointed to by the file descriptior with posix_fadvise(fd, 0,
+len, POSIX_FADV_DONTNEED). We use mmap(NULL, len,
+PROT_READ, MAP_PRIVATE, fd, 0) to create a virtual map-
+ping of the file into memory in order to programmatically
+trigger the page faults through virtual address accesses.
+Our test file to page into memory is a 512 MB test file
+generated by dd if=/dev/zero of=./testfile.bin bs=1M
+count=512 status=progress.
+In Ubuntu, the kernel optimizes reads by reading ahead
+and pulling in the consecutive pages, leading to soft faults.
+To avoid soft faults, we randomize our selection of page and
+also notify the kernel that we’re selecting out of order with
+posix_fadvise(fd, 0, len, POSIX_FADV_DONTNEED).
+We also set madvise(data, len, MADV_RANDOM) to make
+sure that when we access our data, the kernel doesn’t choose
+read-ahead or caching techniques that would prevent hard
+faults. We used the Fisher-Yates algorithm to randomize the
+access order.
+To make sure that we are only triggering hard faults, we
+use getrusage(RUSAGE_SELF, &stats) to check for faults
+before and and after the running the faults. In rusage struct,
+we used ru_minflt to track page reclaims or soft faults, and
+ru_majflt to track page faults or hard faults. In our bench-
+mark, we track take a snapshot of the rusage prior to faults
+and another snapshot after and take the difference to assure
+only hard faults are triggered.
+We ran 15 iterations of our experiment and each iteration
+of the experiment in figure 12 consists of the following:
+1. Open 512MB test file
+2. mmap to create a virtual mapping of the file to memory
+3. Use Fisher-Yates algorithm to generate a random access
+order (see section 4.1.3)
+4. Record start timestamp register value
+5. Access data using randomized access order to trigger
+page faults
+6. Record end timestamp register value
+7. Clear file cache and clean up
+After every run, to make sure that the file data is evicted
+from cache, we use employ three tactics. First, we use
+madvise(data, len, MADV_DONTNEED) to advise the ker-
+nel not to expect access to the data anymore. We use
+madvise(data, len, MADV_DONTNEED). Second, we use
+posix_fadvise(fd, 0, len, POSIX_FADV_DONTNEED) to
+request the kernel to free the cached pages. Third, we use
+munmap(data, len) to free the data in memory.
+We run this benchmark with the same measurement boiler-
+plate as in section 3.1.3. The only difference is we ran this
+experiment for 15 trials.
+4.3.3 Results
+See table 12 for the table of cycles per fault and latency per
+fault in each trial, and table 13 for the mean and standard
+deviation.
+Our resulting latencies are within the same mangnitude
+of our estimate. The key difference is that our estimate is
+predicted to be around 12μs slower with the estimate being
+≈ 78μs and our experiments yielding around 91μs. We specu-
+late that the disk benchmark used to calculate IOPs at 4KQ1
+may have some additional overhead that we’re not aware of.
+In addition, there could be differences in the setups of the ma-
+chines when running the benchmark that can differentiate the
+latency such as how the OS handles faults and the bandwidth
+between memory and disk.
+Our resulting latency is around the expected range of
+NVMe latencies, 10μs - 100μs [12], at 91μs. This demon-
+strates our experiment is within the ballpark range. Although,
+9
+Trial # Faults Avg. Cycles/fault Latency/fault (μs)
+1 131072 173540.8528 92.2370
+2 131072 168969.9116 89.8075
+3 131072 168652.4496 89.6388
+4 131072 169095.0107 89.8740
+5 131072 169032.6367 89.8408
+6 131072 170580.4997 90.6635
+7 131072 169946.7702 90.3267
+8 131072 170005.5584 90.3580
+9 131072 170869.6359 90.8172
+10 131072 169563.9709 90.1233
+11 131072 170969.1180 90.8701
+12 131072 170978.1720 90.8749
+13 131072 175018.8471 93.0225
+14 131072 169088.2336 89.8704
+15 131072 174521.1111 92.7580
+Table 12: Page fault latency measurements using CPU fre-
+quency of 1881.600 MHz. A 512 MB should have 131072
+faults, (512MB ∗ 220)/4096B page size = 131072 accesses
+Metric # Mean Std. Dev
+Avg. Cycles 170722.1852 1983.0779
+Latency (μs) 90.7388 1.0910
+Table 13: Mean and standard deviation of page fault measure-
+ments computed using CPU frequency of 1881.600 MHz.
+it’s unclear whether or not we’re optimistic with our bench-
+mark.
+To answer how our experiment compares to the latency of
+accessing a byte from main memory, it is magnitudes slower.
+For RAM access time, we were measuring with nanoseconds
+and for faults, we were measuring with microseconds. In our
+RAM access benchmark with our largest heap-allocated array
+at 1 GB, the latency is 58.4895ns about 1556x faster than
+page faults at 91μs.
+5 Network
+5.1 Remote Windows Machine
+For these tests, we used a second device operating Windows
+connected over LAN to benchmark non loopback tests. An
+abridged specification of this machine is below. The important
+specification is the network adapter being 1Gb/s.
+Windows Device:
+1. OS: Windows 10 Pro
+2. CPU: Processor AMD Ryzen 5 5600X 6-Core Processor,
+3701 Mhz, 6 Core(s), 12 Logical Processor(s)
+3. RAM: 32Gb 3600Mz
+4. Network Adapter: Intel(R) Wi-Fi 6 AX200 160MHz,
+speed, 1Gb/s
+5.1.1 Network Skeleton
+For all of the below tests, we used a similar skeleton code
+implementation, and simply changed or added send and re-
+ceive call of various sizes. On the Windows side, we use the
+winsock library to setup a TCP listener socket on a different
+port for each test, then accepting the connection in a while
+true loop, so that the Ubuntu client can be easily tuned and
+rerun while leaving the Windows instance running. The inner
+loop on the Windows side is then tuned for each test, sending
+and/or receiving data of various sizes as aligned to the request
+and response of the Linux TCP client.
+On the Ubuntu side, we utilized the posix connect function
+and the arpa/inet.h and netinet/in.h libraries to setup a basic
+TCP client implementation that we share utilization of for
+both the remote and loopback testing code. In each test, we
+begin by creating a socket of type AF_INET for IPv4, and
+SOCK_STREAM for TCP, then we take an address, either
+127.0.0.1 for loopback, or the Windows remote ip address
+obtained from ipconfig on the Windows server host, and a pre-
+set port number for each test (4000 + offset), using inet_pton
+to convert this to an address, then calling connect to open
+a connection to either the loopback client or the Windows
+server. For each test, we then call a separate inner loop, which
+includes our timing code for the network function or operation
+of interest 3.1.3.
+Our loopback receiver server is essentially a linux port of
+the Windows code, using the inet and posix libraries to es-
+tablish a listener socket, and then accepting connections in a
+while (1) loop, which allows it to remain running. Within each
+accept and close, a server version that performs the appropri-
+ate send and receive for that specific test is implemented.
+5.2 Round trip time
+5.2.1 Overall Prediction of Performance
+To predict the performance of RTT, we must first split our pre-
+diction across protocol used. The ICMP protocol is connec-
+tionless, does not carry data, and does not guarantee delivery,
+as opposed to TCP which is built for reliable in order delivery.
+This initially may seem like thus ICMP should perform much
+better. However, ICMP packets are treated at a lower priority
+than TCP by routers and network stacks, thus we predict that
+our TCP RTT should be lower, as we measure RTT after the
+connection is established.
+ICMP RTT: For estimating remote RTT, we see that in our
+network configuration, there is one hop through the home
+router from the Ubuntu laptop device to the Windows "host"
+machine. Thus, from previous experience with ICMP ping to
+remote hosts taking around 5ms over the internet with more
+hops, our estimate should be somewhere below 5ms, which
+10
+we will estimate at around 3ms. Since ICMP packet responses
+are low priority in the network stack, we also predict high
+standard deviation across these measurements. [2] For the
+loopback latency since the loopback interface of a device
+does not utilize the nic and instead is routed in software back
+to the host device software stack. Due to this, we should
+observe very low RTT in our loopback rtt test,which we can
+assume will not differ much from the fastest lmbench UDP
+benchmark, at 93 microseconds, or 0.093 milliseconds. [7]
+TCP RTT: Since we measure the RTT of the TCP protocol,
+which as discussed above is a higher priority in the network
+stack, and we measure rtt after the initial establishing of the
+TCP connection, we assume TCP latency will be lower than
+that of ICMP. [1] On a remote device, we estimate this to be
+around 1ms since it is only one hop from the test machine to
+the remote server. On the loopback interface, this should only
+be the time it take in the software network stack to be sent
+and received. Thus, should be similar to the fastest lmbench
+TCP latency, at 0.162 milliseconds. [7]
+5.2.2 Measurement Methodology
+For measurement of kernel level RTT, we used the ICMP
+protocol based ping utility over many runs, the ping tool
+packages it’s own averages and standard deviations as well,
+so our measurment is cleanly done using it.
+For the measurement of the TCP latency, we utilized a TCP
+send and receive loop between our local environment and the
+remote or loopback host. By having the host send then re-
+ceive, and the remote receive then send, we guarantee that we
+measure 1 rtt of communication each iteration, without our rtt
+being optimized out by the sliding window of TCP protocol
+letting us send un-acked packages. We then ran this bench-
+mark over 1000 sends timing the overall time, with 10 runs of
+the 1000 send benchmark. We utilized a smaller overall trial
+count for network measurments due to the large latencies of
+networked trials, especially with regards to bandwidth.
+5.2.3 Results
+Loopback Latency
+avg (ms)
+Loopback
+Stddev(ms)
+0.03 0.007
+Table 14: ICMP RTT to Loopback using the ping utility
+Remote Latency(ms) Remote Stddev(ms)
+3.248 4.243
+Table 15: ICMP RTT to Remote using the ping utility
+Loopback Latency
+avg (cycles, ns)
+Loopback
+sdev (cycles, ns)
+22963.1941, 12204.93766 1346.7967, 715.8224461
+Table 16: TCP rtt measurements using CPU frequency of
+1881.6 MHz.
+Remote Latency (cycles, ns) Remote sdev (cycles, ns)
+46006109.512, 2129247.206 269459.6948,143217.8278
+Table 17: TCP rtt measurements using CPU frequency of
+1881.6 MHz.
+5.2.4 Analysis
+From the, the first obvious difference is the remote compared
+to loopback latencies for both ICMP and TCP, where the dif-
+ference between the RTT for both protocols is in the factor of
+around 100x. This demonstrates that, as predicted a majority
+of the RTT latency between two processes it in the network
+transfer, from laptop over the wifi NIC, to the router, then
+to the receiving device. Additionally, we can see that the
+TCP latency is lower than the ICMP latency. This matches
+our expectation that while TCP holds state information, it’s
+treated as a higher priority and is thus induces slightly less
+overhead and thus a faster RTT than ICMP. We also see very
+large standard deviation for the remote trials, which matches
+our expectation of a half-duplex wifi device (which can only
+send or receive and not simultanously), being routed through
+a router with other traffic on it. From the above results we
+can conclude that the Loopback Latencies are effectively the
+raw software overhead latency, and thus the 1 hop network
+induced latency is 3.245 ms for ICMP, and 2117042.26834ns
+for TCP. This shows that network latencies are generally
+dominated by time through NIC hardware and in the network.
+The discrepancies between our benchmarks and lmbench is
+likely addressed by running on newer and thus faster hardware
+allowing the software stack to execute faster.
+5.3 Peak bandwidth
+5.3.1 Overall Prediction of Performance
+From the hardware specification, we see that our network
+interfaces on both machines are around 1.0Gb/s. Thus our
+peak possible bandwidth is 1 Gigabit per second. Since the
+network device on our one side is based on wifi we assume
+that for simultaneous read and write, we are operate at half
+peak bandwidth because it is a half duplex connnection. To
+avoid this, we split our bandwidth into a read and write latency
+bandwidth.
+Remote bandwidth: Since our peak 1.0Gb/s for both sides
+of the link, we assume the is the effective peak bandwidth.
+Given that TCP needs to acknowledge every send over the
+11
+abovementioned half duplex connection, and that network
+latencies and bandwidth are a variable factor, due to internals
+of the TCP protocol like [1] congestion control. Thus, we
+estimate our peak read to be around 500Mb/s. Since our client
+and server are mirrored, the read bandwidth should be around
+the same, as we are on a LAN network, and not limited by a
+provider for maximum write speed.
+Loopback bandwidth: Since we do not go through the
+network hardware of the laptop device, we may be able to
+achieve above peak 1.0Gb/s. The transfer rate is limited only
+by the network stack of the kernel, and the memory/cpu hard-
+ware much more strictly than the previous software overhead,
+we cannot estimate off lmbench figures, as it should only
+be affected by the time to copy the data from the outbound
+to inbound network queue in the kernel. Since we are on
+much newer hardware than the lmbench Thus, we may be
+able to achieve a fraction of a memory level of latency, thus
+we estimate that we 10Gb/s.
+5.3.2 Measurement Methodology
+To measure read bandwidth, we use a client that reads
+16000000 Bytes at a time in a recv loop, which writes
+back 1 byte to the remote host between each read to en-
+sure that each write is fully propagated to the buffer before
+the next write. We mirror this methodology for the read
+latency, sending 1 byte, then receiving the 16000000 byte
+chunk. We also use setsockopt function on Windows to
+set the socket’s send and receive buffer sized to 16000000,
+allowing us to more accurately see the latency from the net-
+work stack and RTT, instead of getting blocked on being
+unable to transfer our buffer cleanly to the kernel. we use
+sudo sysctl -w net.core.wmem_max=16000000 sudo
+sysctl -w net.core.wmem_max=16000000 sudo sysctl
+-w net.core.rmem_max=16000000 on the Ubuntu test ma-
+chine to mirror this optimization.
+5.3.3 Results
+Loopback Read
+Bandwidth avg (Cy-
+cle/byte, Mb/s)
+Loopback Read
+Bandwidth stdev (cy-
+cles/byte)
+0.2463, 60673.97483 0.0127
+Table 18: Loopback TCP read bandwidth using CPU fre-
+quency of 1881.6 MHz
+5.3.4 Analysis
+In the above benchmarks, we see that our Loopback Band-
+width is much higher than our remote bandwidth. By con-
+verting the Mb/s values to GB/s for the Loopback Latency,
+we see values around 7GB/s which, while much lower than
+Remote Read
+Bandwidth avg
+(Cycle/byte, Mb/s)
+Remote Read
+Bandwidth stdev
+(cycles/byte)
+20.3414, 734.6593646 0.2542
+Table 19: Remote TCP read bandwidth using CPU frequency
+of 1881.6 MHz
+Loopback Write
+Bandwidth avg
+(Cycle/byte, Mb/s)
+Loopback Write
+Bandwidth stdev
+(cycles/byte)
+0.2802, 53721.62741 0.0405
+Table 20: Loopback TCP Write bandwidth using CPU fre-
+quency of 1881.6 MHz
+Remote Write
+Bandwidth avg (Cy-
+cle/byte, Mb/s)
+Remote Write
+Bandwidth stdev (cy-
+cles/byte)
+22.7870, 655.8125247 1.3698
+Table 21: Remote TCP Write bandwidth using CPU fre-
+quency of 1881.6 MHz
+our memory bandwidth, greatly outpaces our NIC maximum
+value. This reflects the fact that the Loopback interface does
+not need to pass through the NIC hardware, and thus shows
+a much greater bandwidth throughput, as it is only related to
+the software stack latency to pass the bytes. On the network
+end, we see a read and write bandwidth of 734.6593646 Mb/s
+and 655.8125247 Mb/s respectively. Looking at the ideal NIC
+performance for both of our devices being 1Gb/s, we can re-
+flect that we are around 70% utilization of hardware resource
+with our benchmark, however this is likely further influenced
+by the half-duplex nature of Wi-fi connections, meaning that
+even with or read/write dominanted workloads, there is trans-
+mission time that is lost due to Wi-fi being unable to send and
+receive simultaneously. We also note that Read and Write
+bandwidths are close to symmetric, unlike standard internet
+bandwidth test numbers, showing that Read/Write asymmetry
+is to connect to internet and ISP resources, and not a LAN
+limitation.
+5.4 Connection overhead
+5.4.1 Overall Prediction of Performance
+For connection overhead, for the TCP protocol, at a hardware
+level, we need at least 1.5 RTT to establish a connection
+between the client and server. This serves as the baseline time
+for connection overhead. On top of this, we must factor in
+whatever overhead is present in the network stack on each
+device. We can estimate this from our ICMP ping average of
+3.2ms, multiplied by 1.5 to get 4.8ms as a likely overestimate,
+since ICMP is lower priority than TCP. Thus we can bring
+12
+our total estimate to around 4 ms.
+For the loopback interface, we only have software overhead
+and kernel accesses to contend with, thus, we can estimate
+this off the lmbench results of 238 microseconds.
+For connection shutdown overhead, since we do not queue
+any data as a part of this benchmark to avoid the effects
+of having to wait on a data flush, the connection shutdown
+overhead should be around 1 RTT, for the TCP fin and fin-ack
+packets. Since TCP is again higher priority than UDP, we
+can estimate around 3ms teardown time. For the loopback
+interface, this should again only be software bound, thus we
+estimate that we should be a fraction of the lmbench figures,
+at 100 microseconds.
+5.4.2 Measurement Methodology
+For connection overhead, we benchmarked the time it takes
+for the posix connect function to return a valid socket. We run
+this in a loop over 1000 trials, with 10 trials of each to obtain
+measurements, as in the above connection skeletion. Since
+the posix connect function waits until a valid socket is opened
+and thus the connection is established, we can be confident
+that the connection is usable and end to end connected by the
+time the connect function returns, and time the runtime across
+the 1000 trials.
+We used a similar measurement methodology with close for
+tear down, calling the close(socket) function on linux client,
+and then timing the time before and after the run. Since we
+do not send any data in the connection prior to this, we do not
+need to wait on flushing send buffers, and thus get an accurate
+measurement just for the time of close.
+5.4.3 Results
+Loopback Connect
+Latency avg (Cycles,
+ns)
+Loopback Connect
+Latency stdev (cycles)
+216475.2000,
+115056.5688
+599784.5187,
+318785.4717
+Table 22: Loopback TCP connection time using a CPU
+frequency of 1881.6 MHz
+Median: 15663.5 cycles, 8325.15025 ns
+Remote Connect
+Latency avg (Cycles,
+ns)
+Remote Connect
+Latency stdev (cycles)
+5534023222324130,
+2941333340000000
+8453360104086690,
+4492960900000000
+Table 23: Remote TCP connection time using a CPU fre-
+quency of 1881.6 MHz
+Median: 510251 cycles, 271198.4065 ns
+Loopback Close
+Latency avg (Cycles,
+ns)
+Loopback Close
+Latency stdev (cycles)
+6106.0000, 3245.339 1277.7245,
+679.1105717
+Table 24: Remote TCP connection close overhead using a
+CPU frequency of 1881.6 MHz
+Remote Close
+Latency avg (Cycles,
+ns)
+Remote Close
+Latency stdev (cycles)
+39945.9000,
+21231.24585
+2244.3587,
+1192.876649
+Table 25: Loopback TCP connection close overhead using a
+CPU frequency of 1881.6 MHz
+5.4.4 Analysis
+From the above results, the first and most obvious note is that
+the overhead of connecting to a socket is not only extremely
+high, but extremly variant. We see that while loopback con-
+nection overhead is lower than the remote connection over-
+head, both are influenced by some having some runs with
+extremely high latencies. From the implementation of the
+benchmark, we recall that each "run" has a 1000 connect at-
+tempts each. Combining that with the TCP 3 way handshake
+needing 1.5 RTT with SYN, SYN-ACK, and ACK packets
+being exchanged. However, even multiplying the rtt of our
+TCP connection as seen above by 1.5 does not explain this
+latency. For the remote case, we can see that congestion con-
+trol situations within the router or LAN network can lead to
+packet drop or congestion, leading to some runs blocking for
+a long period and seeing high latency. However, this does not
+explain the same factors being seen on the loopback interface,
+since that should not be influenced by network hardware con-
+gestion. However, we know that through processes like lsof,
+the kernel keeps global PID to socket mappings, thus, this
+high variable latency is likely caused by kernel resources man-
+agement and allocation when connecting and to new sockets
+via connect.
+The results for close have much less variance and latency.
+From a network protocol. since the only required network
+communication is the FIN, and FIN-ACK packet, it makes
+sense that this latency is much lower than the latency for
+connect, which is reflected above. Since the close call does
+not suffer from the same outliers as connect above, for both
+loopback and remote, we are left to conclude that the ker-
+nel implementation of close suffers from less overhead than
+connect.
+13
+6 File System
+6.1 Size of file cache
+6.1.1 Overall Prediction of Performance
+Base hardware performance: Linux systems like Ubuntu
+automatically manages the file cache in accordance to the
+system load. We run our benchmarks isolated with only a
+minimal set of other processes. Therefore, we predict the
+theoretical upper bound for the file cache to be nearly the
+entire RAM: 16 GB. [11]
+For this benchmark, we will memory-map the file so we
+can use our estimated ≈ 110 ns access time needed for main
+memory from sectionsec:mem-access-time.
+Software overhead: will need a system call to memory-
+map our file and do reads, so we can add the cost of two
+system calls which we found to be 74.1663 ns in section 3.4:
+2 ∗ 74.1663ns = 148.3326 ns.
+Therefore, the total estimated time to access one page from
+a file is roughly 258.3326 ns.
+6.1.2 Measurement Methodology
+For file sizes ranging from 1 MB to 16 GB, we memory-
+map the file to access the pages directly: mmap(NULL, len,
+PROT_READ, MAP_PRIVATE, fd, 0);.
+We disable kernel readahead by advising the kernel we will
+be accessing the file randomly. This prevents prefetching
+blocks of the file.
+posix_fadvise(fd, 0, len, POSIX_FADV_RANDOM);
+madvise(data, len, MADV_RANDOM);
+We use the same measurement boilerplate as in section
+3.1.3.
+To measure I/O access time for the file, we allocate an
+array of page indices and shuffle them using Fisher-Yates
+(see section 4.1.3). This is another prefetching prevention
+technique. In the inner loop, we go through the number of
+the pages and access a byte on the page and another byte half
+way through the page to add some extra work and not have it
+optimized away. The access is done through a XOR which
+cannot be optimized by the compiler:
+1 for (size_t k = 0; k < n_pages; k++) {
+2 size_t off = order[k] * (size_t) page_size;
+3 sink ^= (unsigned char) data[off];
+4 sink ^= (unsigned char) data[off + page_size /
+2];,→
+5 }
+At the start of every trial, we advise the kernel to
+drop the file from cache with posix_fadvise(fd, 0, len,
+POSIX_FADV_DONTNEED);. Before and after the inner loop, we
+use getrusage to meausre how many soft and hard faults
+we get. This is how we determine that the file has then been
+loaded into the file cache.
+6.1.3 Results
+The first trial out of ten causes n hard page faults, where n
+is the number of pages within the file. We separate out the
+first run from each size below for this reason, as they have a
+significantly higher latency. After the hard faults occur, the
+file is now within the file buffer cache, and since we memory-
+mapped it, access times become much faster.
+See tables 26, 27, and figure 2. Table 28 gives the mean
+over all file sizes.
+We were unable to run our 16 GB file size to completion
+as the system began thrashing, unable to ever fit into the file
+cache even after three hours of running while other similarly
+sized benchmarks at least finished within less than an hour.
+This supports our estimate of the file cache size being the
+same size as the RAM, in our case 16 GB.
+The large latency on the hard-faulting 1 MB ( 220 bytes)
+may be due to the “pseudo-amortization” phenomneon
+we see in later benchmarks, where smaller files have less
+pages/blocks to normalize against, so their averages feel more
+drastic.
+# Bytes Avg. Cycles/page Latency/page (ns)
+220 228.5352 121.4664
+221 172.5469 91.7087
+222 167.9980 89.2909
+223 173.0654 91.9843
+224 190.0049 100.9876
+225 200.1318 106.3701
+226 201.8721 104.3544
+227 203.8389 108.3404
+228 205.4590 109.2015
+229 205.7637 109.3634
+230 205.9033 109.4376
+231 209.5781 111.3908
+232 210.0889 111.6623
+233 216.2480 114.9358
+Table 26: Hard fault time for each file size. This happens in
+the first trial, so there is no standard deviation to mesaure.
+6.2 File read time
+6.2.1 Overall Prediction of Performance
+Base hardware performance: Given sequential read speeds
+of 2,366 MB/s, sequential writes of 955 MB/s on the measured
+disk and reading in 4096B blocks, we can estimate the per-
+block performance as:
+14
+# Bytes Avg.
+Cycles/page
+StdDev
+Cycles/page
+Latency/page
+(ns)
+220 5.0841 2.3922 2.7022
+221 6.4453 0.2220 3.4257
+222 6.7066 0.3305 3.5645
+223 11.5735 0.6379 6.1513
+224 22.6301 0.2600 12.0279
+225 34.4351 0.8415 18.3023
+226 39.3171 0.4146 20.8970
+227 40.8753 0.1139 21.7048
+228 41.5825 0.0520 22.1011
+229 41.8167 0.0626 22.2256
+230 42.5048 0.0321 22.5913
+231 42.8878 0.0382 22.7949
+232 43.5095 0.2992 23.1253
+233 49.3040 0.0131 26.2051
+Table 27: Non-faulting read time for each file size. These are
+trials 1-9 (excluding first one).
+Avg. Cycles/page Latency (ns)/page
+Hard faults 198.7167 97.7931
+No faults 30.6195 16.2728
+Table 28: Results of estimating time for a page access
+4096B
+block × s
+2366 × 220B × 109ns
+1s = 1650.9932 ns/blk (read)
+4096B
+block × 109ns
+955 × 220B = 4090.3141 ns/blk (write)
+For random access, we have an estimated 821 MB/s for
+random-seek reads:
+4096B
+block × 109ns
+821 × 220B = 4757.9172 ns/blk (random seek)
+Software overhead: The software overhead would be the
+cost of trapping into kernel when performing a read() system
+call which we found to be about 74.1663 ns in section 3.4;
+we add this to the above hardware predictions. As expected,
+the cost of a system call would be magnitudes smaller than
+the cost of a disk read.
+Therefore, our predictions are:
+• Sequential-access read per block: 1725.1595 ns/block
+• Random-access read per block: 4832.0835 ns/block
+6.2.2 Measurement Methodology
+We use the measurement boilerplate outlined in section 3.1.3
+but lower the number of loops to 32, as higher number of loops
+did not yield us substantially different results. Additionally,
+220 223 226 229 232
+0
+20
+40
+60
+80
+100
+120
+Array size (bytes)
+Average latency (ns)
+Run 0 (hard faults)
+Run 1-9 (cached)
+Figure 2: Latency for accessing a page within a file.
+since we are normalizing our times to per block, the number of
+blocks in a file provide enough normalization for our results.
+For both sequential and random access measurements, we
+read in 4096 byte blocks, which corresponds to the default
+in UNIX systems. We measure how long it takes to access
+and read in every block within a file whose size ranges from 1
+MB to 1 GB within each loop of the trial. Notably, since we
+use powers-of-two for our file, our blocks are aligned within
+a file and can be easily indexed from the start of a file.
+For sequential-access, we do not disable kernel read-ahead
+and prefetching for blocks, since this makes each read become
+random as the kernel has to fetch blocks once more. At the
+beginning of each loop, but before we start timing, the file is
+re-seeked to the beginning of the files using lseek(), and we
+simply iterate through all the blocks of the file and perform
+read() system calls.
+For random-access, we collect all block indices within
+an array and randomize them using the Fisher-Yates algo-
+rithm 4.1.3. During each read-through of a file, we loop
+through the randomized index array and read a block offset-
+ted by BLOCK_SIZE * rand_idx from the start of the file.
+The pread() system call performs an atomic combination of
+lseek and read together by taking in the offset directly in its
+15
+function signature.
+6.2.3 Results
+See table 29 for the cycles and latency for sequential-access
+reads, and table 30 for random, and figure 3 for the latencies
+plotted on a log-log plot. Table 33 gives a summary of both
+local and remote read times.
+Evidently, randomly accessing blocks within files has a
+higher latency than sequential access since the file cache
+cannot predict which blocks to fetch next.
+Our estimates were slightly higher than what we actually
+got, but are within the ballpark so we believe our benchmark
+methodology was successful and accurate.
+We see the read latencies slightly decrease as the file size
+grows, especially for sequential reads at the lower file sizes
+below 16 MB (224 bytes). Since smaller files may more
+easily fit into cache, perhaps even contiguously, blocks from
+these files may be highly optimal to fetch by virtue of spatial
+locality.
+We also suspect our measurement methodology may cause
+“pseudo-amortization" as larger files are measured for several
+thousand more blocks than smaller files, which is evident
+when seeing the very high standard deviation for 1 MB (220
+bytes) versus later sizes.
+Additionally, since we do not advise the kernel to drop
+cached blocks for sequential access to measure true access
+patterns, the high standard deviation may be attributed to
+kernel optimizations that vary trial-to-trial.
+# Bytes Avg.
+Cycles/blk
+StdDev
+Cycles
+Latency/blk
+(ns)
+220 8870.5625 687.4803 4714.7040
+221 6988.5281 36.4263 3714.4027
+222 6303.9500 37.9880 3350.5494
+223 6121.4438 44.6470 3253.5474
+224 5959.7188 21.3574 3167.5905
+225 5959.3094 36.1609 3167.3729
+226 5637.8906 14.5914 2996.5389
+227 5587.4344 21.9012 2969.7214
+228 5612.9937 18.9179 2983.3062
+229 5582.6594 38.9079 2967.1835
+230 5596.4250 39.6650 2974.4999
+Table 29: Sequential-access read performance
+6.3 Remote file read time
+We used the ieng6 department machines to run this exper-
+iment, as like the assignment specification mentions, a file
+access on a particular user’s partition mounted on NFS sim-
+ulates doing a remote file access. The ieng6 timeshare is
+a Linux Mint machine with a Intel(R) Xeon(R) Gold 5220
+# Bytes Avg.
+Cycles/blk
+StdDev
+Cycles
+Latency/blk
+(ns)
+220 165343.2250 231.5868 87879.9241
+221 163254.4594 233.4643 86769.7452
+222 164288.1187 364.5908 87319.1351
+223 164675.2344 78.8387 87524.8871
+224 165132.4469 114.7126 87767.8955
+225 165694.3750 65.4647 88066.5603
+226 165761.6875 36.9684 88102.3369
+227 166340.5063 12.1403 88409.9791
+228 166844.6250 13.9942 88677.9182
+229 167030.5562 15.6218 88776.7459
+230 167464.9500 9.3423 89007.6209
+Table 30: Random-access read performance
+220 222 224 226 228 230
+103
+104
+105
+File size (bytes)
+Average per-block read time (nanoseconds/block)
+Sequential Access
+Random Access
+Figure 3: Average per-block read time for sequential and
+random file access against file size (local)
+CPU @ 2.20GHz CPU, and 64 GB of RAM shared between
+all. Without superuser permissions, we were unable to obtain
+other substantial information about its hardware.
+Assuming the single core we run the benchmarks has 2.20
+GHz frequency, this corresponds to a cycle time of 0.4545 ns
+on ieng6.
+ieng cycle time = 1
+2.20 × 109Hz = 0.4545ns
+6.3.1 Overall Prediction of Performance
+To get a rough estimate on the read speeds for the 13 GB of
+disk that each user has a maximum on, we ran the following
+16
+command with a generated 1 GB file from our test setup [4]:
+time dd if=1G.bin of=/dev/null bs=4k
+which gives us 225 MB/s, therefore an estimated per block
+time of:
+4096B
+block × s
+225 × 220B × 109ns
+1s = 17361.1111 ns/blk (read)
+Without superuser permissions, we cannot install bench-
+marking tools such as fio to obtain disk random seek time.
+Since in the local benchmark (see section 6.2) the random seek
+time was about 4832.0835/1725.1595 = 2.8 times larger than
+the sequential, we can estimate the random seek to be:
+17361.1111 ns/blk (read)×2.88 = 48611.1111 ns/blk (read)
+Without knowing the network topology of the ieng6
+servers, we arbitrarily guess they could impose a 25% penalty
+on these times.
+Therefore, with the same 74.1663 ns added for the software
+overhead as in the local benchmark, we arrive at:
+• Sequential-access read per block: 21775.5552 ns/block
+• Random-access read per block: 60838.0552 ns/block
+6.3.2 Measurement Methodology
+No changes are made to the local file read time benchmark
+highlighted in 6.2 in regards to code.
+To note, since this benchmark was performed over a school-
+shared timeshare, these findings are influenced by system
+load. These measurements were conducted on ieng-203
+when there were about 50 other users logged in at the time.
+6.3.3 Results
+See table 31 for sequential access, table 32 for random access,
+and figure 4 for these plotted. Table 33 gives a summary
+of both local and remote read times. Note that the latencies
+calculated are based off an assumed 0.4545 ns on the ieng
+server.
+Surprisingly, our estimate for the sequential access was
+greatly overestimated, and the latency for sequential was only
+a smaller factor of 7-9 times slower than on local. Meanwhile,
+our random access estimates were about 2 times faster than
+the actual results. Comparing local random versus remote
+random, there is a factor of about 10.
+Therefore, when comparing the local times with the remote
+times, we see a network penalty of roughly 8-10 times the
+local disk read times.
+Since we used a timeshare environment where our process
+does not have full priority, along with the added load of other
+# Bytes Avg.
+Cycles/blk
+StdDev
+Cycles
+Latency/blk
+(ns)
+220 36568.6281 9115.9669 16620.44147
+221 35746.0000 4703.6274 16246.5570
+222 30128.0563 2328.3412 13693.2016
+223 27347.4188 1532.7754 12429.4018
+224 27893.6063 1045.0982 12677.6441
+225 26653.1000 758.8176 12113.8340
+226 25713.6469 863.4528 11686.8525
+227 24935.6781 481.1890 11333.2657
+228 24594.4062 899.2932 11178.1576
+229 25413.2125 585.6443 11550.3051
+230 25092.0438 542.0669 11404.3339
+Table 31: Sequential-access read performance, remote
+# Bytes Avg.
+Cycles/blk
+StdDev
+Cycles
+Latency/blk
+(ns)
+220 979205.3344 150355.6800 445048.8245
+221 934031.8750 41371.8548 424517.4872
+222 950828.9313 16152.3494 432151.7493
+223 931623.2656 20223.0482 423422.7742
+224 972046.9062 51313.3624 441795.3189
+225 968680.4250 27633.0571 440265.2532
+226 1107872.8281 216246.9904 503528.2004
+227 949922.0312 91831.6754 431739.5632
+228 852735.4000 50170.8104 387568.2393
+229 902179.0062 57262.0126 410040.3829
+230 856967.4000 17719.9629 389491.6833
+Table 32: Random-access read performance, remote
+users, our benchmark hit a significant bottleneck when mea-
+suring. We ran the experiment several times to validate these
+numbers as being mostly consistent within their range.
+The follwing is a summary of both local and remote, by
+taking the mean of the averages and latencies.
+Avg. Cycles/blk Latency/blk (ns)
+Sequential (local) 6201.9014 3296.3106
+Random (local) 165620.9259 88027.5226
+Sequential (remote) 28189.6179 12812.1814
+Random (remote) 946008.4912 429960.8615
+Table 33: Mean of all averaged cycles and latencies across all
+file sizes per-block
+17
+220 222 224 226 228 230
+103
+104
+105
+File size (bytes)
+Average per-block read time (nanoseconds/block)
+Sequential Access (Remote)
+Random Access (Remote)
+Figure 4: Average per-block read time for sequential and
+random file access against file size (remote)
+6.4 Contention
+6.4.1 Overall Prediction of Performance
+Base hardware performance: can ultize the same estimates
+from our file read time benchmark 6.2 to get the estimations
+of per-block performance as:
+• Sequential-access read per block: 1725.1595 ns/block
+To estimate the contention for reads, we can multiply our
+random-access time by the expected additional reads. For
+each additional process, we estimate a linearly scaled amount
+of additional reads for disk to handle in a serialzed way. For
+a given P processes we then estimate the access time per
+block would be P ∗ Est. sequential-access read per block or
+P ∗ 1725.1595. We predict that this estimate should be an
+upper bound for the reads.
+Software overhead: The software overhead here would be
+the read syscall which can be estimated by 3.4 at 36.0715ns.
+Our final estimate of the contention overhead
+as a function of number of processes P is: P *
+Est. sequential-access read per blockorP * 1761.2665.
+6.4.2 Measurement Methodology
+To get the average time to read one file system block under
+contention, we systematically ran through a process to create
+N different files, N processes, and for each process, read one
+unique file block. In our benchmark, we set N as 50 and we
+would loop through i iterations from 1 to N creating i files to
+test under i processes for contention. For each file, we write
+into the file a 1000 blocks of data, our machine’s block size
+is 4096KB. We then reset the file pointer with lseek, clear
+the cache with posix_fadvise, and close the file descriptors.
+We then reopen them with flag, O_DIRECT to force reading
+from disk and record all the various file descriptors in an
+array.
+We then create N processes to conduct the reads. We use a
+pipe to make sure all processes are created and ready to exe-
+cute prior to starting any of the reads. Once, the processes are
+ready, we start timing utilizing the timestamp register method
+(see 3.1). Within the timing instructions, we loop through
+and read though 1000 blocks of data within the file using
+read. Our resulting measurement is the average read time
+for one block. To keep track of average cycles per process,
+we map a region of shared memory with mmap(NULL, count
+* sizeof(uint64_t), PROT_READ | PROT_WRITE, MAP_SHARED
+| MAP_ANONYMOUS, -1, 0) where each process has dedicate
+entry to add write their average read cycles for one block.
+After every run, we sum up the average read cycles for a
+block for every process to get the average reads across all
+files. Also we clear the shared memory to keep our runs
+consistent.We repeat this experiment 10 times per file count.
+6.4.3 Results
+Our resulting latencies for block read with a fixed process
+count from 1-50 are listed on table 34. We graph our result-
+ing block latency under a fixed number of processes reading
+simultaneously in figure 5.
+Our results for a single file and a single process fall into
+the range of between a sequential singular block access and
+a sequential block access 4MB. Our hypothesis of why they
+are not a closer match in cycles even for one file, is that
+we’re running sequential reads while using O_DIRECT to avoid
+using the file cache. Due to sequential reads, there might be
+some prefetching done on the disk which can explain some
+additional speed up. This latency is also within the range of
+our estimated sequential-access read per block.
+For contention, we found that the cycles started to expo-
+nentially grow from 1 process to 5 processes. After that, the
+cycles started growing linearly instead with every additional
+process. Our hypothesis here is that for lower process counts,
+the disk cache is able to optimize reads but as quickly fills
+up and starts reaching it’s maximum performance. That’s
+where we’re starting to see linear growth where the workload
+is still increasing, more file reads, but the disk cache speedup
+is now amortized. We also noticed that the standard deviation
+dropped from steeply from 5 and beyond which can be a re-
+sult of reaching a steady state as the cache optimizations are
+amortized.
+Thus from the varied growths in our graph and to better
+represent its values, we have one function to represent count
+of contending processes from 1-5 and another from 6 - 50. For
+each function, we based it off of the min and max latencies in
+18
+0 10 20 30 40 50
+0.2
+0.4
+0.6
+0.8
+1
+1.2
+1.4
+1.6
+·105
+Processes
+Time per block (ns)
+Avg time (error bars = StdDev)
+Figure 5: File system contention; average time per block vs
+number of processes
+each respective range and derived a line of best fit.
+For calculating estimated block read time for contending
+processes 1-5:
+block access ns = 17488.75 ∗ P + 2289.25, where P is the
+count of contending processes.
+For calculating estimated block read time for contending
+processes 6-50:
+block access ns = 1577.59 ∗ P + 81785.43, where P is the
+count of contending processes.
+Our estimates were pretty close to the growth of latency
+under contending processes. The growth was estimated to be
+1725.1595 ∗ P and the actual results were about 8% faster at
+1577 ∗ P on the higher end of processes. This could be due
+to slight variation in how our benchmark tested reads versus
+the estimate. In our benchmark, we used O_DIRECT to force
+disk reads, which was still susceptible to optimization on the
+disk end. The online benchmark may had other settings that
+removed this influence.
+Overall, we found that our contention benchmark scales
+monotonically with additional workload which we expected.
+There is still some unknown causes to deviation within the
+lower process counts. The causes of the higher deviation on
+the lower processes could be caused by variability of how
+the disk optimizes retrievals. A further experiment could be
+testing on various file sizes to see if the deviations change.
+7 Summary
+A summary of our results can be found in table 35.
+Measurement overhead is the summation of timing over-
+head (section 3.1) and looping overhead (section 3.2).
+Many of the CPU measurements were predicted using CPI,
+which we categorize as a base hardware performance. When
+we scaled according to a paper, we assume that the hardware
+and software overhead are both captured when we scale our
+CPU to their final results.
+19
+# Processes Avg.
+Cycles/block
+StdDev
+Cycles/block
+Latency/block
+(ns)
+1 37212.7000 1585.4160 19778.5501
+2 56326.3500 2066.7258 29937.4550
+3 94183.0667 15473.9480 50058.3000
+4 161580.8000 15300.1794 85880.1952
+5 168831.4600 5278.8860 89733.9210
+6 171685.9833 493.3227 91251.1001
+7 173007.3857 431.6586 91953.4255
+8 174165.7125 572.7438 92569.0762
+9 175784.9556 417.9996 93429.7039
+10 177830.6700 1445.2776 94517.0011
+11 178677.3091 622.3632 94966.9898
+12 180957.9750 1110.7490 96179.1637
+13 181994.0846 513.3220 96729.8560
+14 183679.3786 612.0981 97625.5897
+15 185832.9800 1488.5600 98770.2289
+16 187038.9250 608.6152 99411.1886
+17 189129.5000 333.7642 100522.3293
+18 192404.1389 1100.6954 102262.7998
+19 192550.0263 878.4807 102340.3390
+20 194278.0700 611.2966 103258.7942
+21 196747.7667 1385.5861 104571.4380
+22 198850.4227 283.4275 105688.9997
+23 200818.4783 626.9963 106735.0212
+24 203011.3000 1048.5089 107900.5060
+25 205429.5600 1368.8614 109185.8111
+26 207816.2000 1795.9981 110454.3103
+27 209067.8444 485.4251 111119.5593
+28 211346.5393 584.5340 112330.6856
+29 214183.1759 409.0074 113838.3580
+30 216891.1967 926.3467 115277.6710
+31 219565.6774 1644.6265 116699.1575
+32 221699.7344 724.4048 117833.4088
+33 225162.0545 1037.3765 119673.6320
+34 226347.0412 799.7277 120303.4524
+35 230109.6114 694.2451 122303.2585
+36 233399.8111 1855.1927 124051.9996
+37 236697.8568 496.5905 125804.9109
+38 239440.1289 789.5356 127262.4285
+39 243298.8821 906.1411 129313.3558
+40 247895.9700 744.8524 131756.7081
+41 252250.7268 1609.5251 134071.2613
+42 256514.8929 652.3576 136337.6656
+43 262402.8860 469.0068 139467.1339
+44 268188.4432 923.0616 142542.1576
+45 274396.9133 1294.4712 145841.9594
+46 279403.5739 441.1923 148502.9995
+47 284520.5745 464.7928 151222.6853
+48 290406.6271 694.6219 154351.1223
+49 296773.9755 1566.5251 157735.3680
+50 302286.3120 690.6586 160665.1748
+Table 34: File System: Contention: average cycles and la-
+tency per file block access with a fixed number processes
+reading at once 20
+Table 35: Summary of our benchmarks.
+Operation Base Hardware
+Performance (ns)
+Estimated
+Software
+Overhead (ns) Predicted
+Time (ns) Measured
+Time (ns)
+CPU - Measurement
+overhead
+13.3691 N/A 13.3691 8.685
+CPU - Procedure call
+overhead
+0.9902 (per
+added arg.)
+N/A 0.9902 ≈ 0.6 (per added arg.)
+CPU - System call over-
+head
+N/A 53.6646 53.6646 36.0715
+CPU - Task creation time
+(kernel threads)
+8695.6522 N/A 8695.6522 4117.7254
+CPU - Task creation time
+(user processes)
+17391.3043 N/A 17391.3043 20817.8185
+CPU - Context switch
+time (kernel threads)
+782.6 N/A 782.6 868.5359
+CPU - Context switch
+time (user processes)
+391.3 N/A 391.3 20817.8185
+Memory - Access time
+(main memory)
+35 1.2925 36.2925 55 <
+Memory - Bandwidth
+(reads)
+68 GB/s N/A 68 GB/s 21.0607 GB/s, 0.0442
+ns/byte
+Memory - Bandwidth
+(writes)
+50 GB/s N/A 50 GB/s 15.3572 GB/s, 0.6064
+ns/byte
+Memory - Page fault ser-
+vice time
+78.7623 μs N/A 78.7623 μs 44.1327 μs
+Network - Round trip
+time
+N/A N/A 93000 ICMP lo-
+cal
+162000 TCP lo-
+cal
+30000 local icmp
+3248000 remote icmp
+12204.93766 loopback
+TCP
+2129247.206 remote
+TCP
+Network - Peak band-
+width
+1.0 Gb/s N/A N/a 60673.97483 Mb/s
+Loopback Read
+53721.62741 Mb/s
+Loopback Write
+Remote Read
+734.6593646 Mb/s
+Remote Write
+655.8125247 Mb/s
+Network - Connection
+overhead
+N/a N/a 100000 Loop-
+back Connect
+Loopback Connect
+115056.5688 ns
+Remote Connect
+2941333340000000 ns
+Loopback Close
+3245.339 ns
+Remote Close
+21231.24585 ns
+File system - Size of file
+cache
+110 148.3326 258.3326/page 97.7931/page on hard
+fault, estimated 16 GB
+file cache
+File system - File read
+time (sequential)
+1650.9932 36.0715 1687.0647 3296.3106/blk
+21
+Table 35: Summary of our benchmarks.
+Operation Base Hardware
+Performance (ns)
+Estimated
+Software
+Overhead (ns) Predicted
+Time (ns) Measured
+Time (ns)
+File system - File read
+time (random)
+4757.9172 74.1663 4793.9887 88027.5226/blk
+File system - Remote file
+read time (sequential)
+17361.1111 ×
+1.25
+74.1663 21775.5552 12812.1814/blk
+File system - Remote file
+read time (random)
+48611.1111 ×
+1.25
+36.0715 60838.0552 429960.8615/blk
+File system - Contention 1650.9932 -
+4757.9172 (block
+access)
+36.0715 P ∗ 1761.2665
+
+
+
+17488P + 2289,
+1 ≤ P ≤ 5,
+1577P + 81785,
+6 ≤ P ≤ 50.
+References
+[1] Rfc 793 — transmission control protocol, Sept 1981.
+[2] Limitations of icmp echo for network measurement, 2025.
+[3] CHEN, J. B., ENDO, Y., CHAN, K., MAZIERES, D., DIAS, A., SELTZER, M., AND SMITH, M. D. The measured performance of personal computer
+operating systems. In Proceedings of the Fifteenth ACM Symposium on Operating Systems Principles (New York, NY, USA, 1995), SOSP ’95, Association
+for Computing Machinery, p. 299–313.
+[4] GITE, V. Linux and unix test disk i/o performance with dd command, Aug 2015.
+[5] HARDDRIVEBENCHMARK.NET. Samsung mzvlq1t0hblb-00bh1 benchmarks. https://www.harddrivebenchmark.net/hdd.php?hdd=SAMSUNG%
+20MZVLQ1T0HBLB-00BH1&id=29801, 2025. Accessed: 2025-11-14.
+[6] INTEL. Theoretical maximum memory bandwidth for intel® coretm x-series, 2021.
+[7] MCVOY, L., AND STAELIN, C. lmbench: Portable tools for performance analysis. In USENIX 1996 Annual Technical Conference (USENIX ATC 96) (San
+Diego, CA, Jan. 1996), USENIX Association.
+[8] OUSTERHOUT, J. Why aren’t operating systems getting faster as fast as hardware?
+[9] PAOLONI, G. How to benchmark code execution times on intel® ia-32 and ia-64 instruction set architectures, Sep 2010.
+[10] PATTERSON, D. A., AND HENNESSY, J. L. Computer Organization and Design The Hardware/Software Interface - MIPS Edition. Morgan Kaufmann,
+2021.
+[11] PROJECT, T. L. D. The buffer cache.
+[12] PURE STORAGE, INC. What is nvme? the complete guide to non-volatile memory express. https://www.purestorage.com/knowledge/what-is-nvme.
+html, 2025. Accessed: 2025-11-14.
+[13] WIKIPEDIA CONTRIBUTORS. Fisher–yates shuffle — Wikipedia, the free encyclopedia. https://en.wikipedia.org/w/index.php?title=Fisher%
+E2%80%93Yates_shuffle&oldid=1321879330, 2025.
+22

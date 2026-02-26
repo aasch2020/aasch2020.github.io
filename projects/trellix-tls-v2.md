@@ -1,6 +1,4 @@
-# Trellix Software TLS Analysis
-
-**June 2025** | University of California San Diego
+# Trellix Software TLS Analysis — Project Copy (v2)
 
 ## Summary
 
@@ -33,8 +31,5 @@ Enterprises run agents (Trellix xAgent, Qualys Cloud Agent) that send data over 
 - **Privacy impact** — Clarified scope of exfiltrated data (processes, files, network, mounts, kernel params, services) for endpoint privacy.
 
 ---
-## Sources
 
-<p>
-	<a href="/assets/pdfs/Trellix.pdf" class="btn" target="_blank" rel="noopener">View PDF</a>
-</p>
+*V2 project copy. Original: [trellix-tls.md](trellix-tls.md). [View PDF](/assets/pdfs/Trellix.pdf)*

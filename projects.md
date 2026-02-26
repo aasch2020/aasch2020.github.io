@@ -115,6 +115,29 @@
       </div>
     </div>
   </a>
+
+  <a href="/projects/systems_measure" class="grid-card">
+    <div class="card-image-box">
+      <img
+        src="/assets/img/projects/systems_measure.svg"
+        alt="Systems Measurement Benchmarks"
+        class="card-image"
+      />
+    </div>
+
+    <h3>Systems Measurement Benchmarks</h3>
+
+    <div class="card-two-col">
+      <div>
+        <p>Benchmark suite for CPU, memory, network, and file operations on Ubuntu; implemented in C with TSC timing and lmbench-style methodologies.</p>
+      </div>
+
+      <div class="card-meta">
+        <p><strong>Tech:</strong> C, Ubuntu</p>
+        <p><strong>Date:</strong> Fall 2025</p>
+      </div>
+    </div>
+  </a>
 </div>
 
 <script src="/assets/js/projects.js"></script>
