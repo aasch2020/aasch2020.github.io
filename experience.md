@@ -23,6 +23,7 @@
 - Triaged and responded to customer security and pentest findings.
 - Gained experience across multiple areas of the Centric PLM product.
 - Leveraged prior knowledge of Centric plm product to respond to and remeidate pentest findings.
+
 ### Tech and Skills
 - Javascript, Typescript, Dojo, Java, Docker, SQL, HTML, Wireshark, Burpsuite, 
 - Deployment and Configuration Management, Production Support, Threat Modeling, Security Vulnerability Remediation, Secure Coding, Secure Hardening
