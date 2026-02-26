@@ -84,6 +84,16 @@
   object-fit: cover;
 }
 
+/* Heading hierarchy: ensure h4 is smaller than h3 */
+h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+h4 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
 /* Hide ghosted '#' permalink anchors on headings */
 h1 > a.heading-link,
 h2 > a.heading-link,
