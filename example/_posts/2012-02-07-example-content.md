@@ -32,7 +32,7 @@ Vivamus sagittis lacus vel augue rutrum faucibus dolor auctor. Duis mollis, est 
 ### Heading 3
 Vivamus sagittis lacus vel augue rutrum faucibus dolor auctor.
 
-#### **Heading 4**
+#### Heading 4
 Vivamus sagittis lacus vel augue rutrum faucibus dolor auctor.
 
 ##### Heading 5

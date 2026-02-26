@@ -1205,7 +1205,7 @@ This maintenance release includes various quality-of-life improvements when usin
 * The sidebar content width is now limited to the width of the sidebar (this only effects large screens).
 * Project cards and pagination buttons now have slightly rounded borders for a less "rigid" look.
 
-#### **How to restore the old styles**
+#### How to restore the old styles
 If you would like to use the old font, add the following to `_config.yml`:
 
 ~~~yml
