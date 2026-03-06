@@ -22,7 +22,7 @@
 - Identified and repaired security vulnerabilities on the C8 platform using full‑stack knowledge.
 - Triaged and responded to customer security and pentest findings.
 - Gained experience across multiple areas of the Centric PLM product.
-- Leveraged prior knowledge of Centric plm product to respond to and remeidate pentest findings.
+- Leveraged prior knowledge of Centric plm product to respond to and remediate pentest findings.
 
 ### Tech and Skills
 - Javascript, Typescript, Dojo, Java, Docker, SQL, HTML, Wireshark, Burpsuite, 
