@@ -1,0 +1,503 @@
+%%%%%%%%%%%%%%%%%
+% This is an sample CV template created using altacv.cls
+% (v1.7.4, 30 July 2025) written by LianTze Lim (liantze@gmail.com). Compiles with pdfLaTeX, XeLaTeX and LuaLaTeX.
+%
+%% It may be distributed and/or modified under the
+%% conditions of the LaTeX Project Public License, either version 1.3
+%% of this license or (at your option) any later version.
+%% The latest version of this license is in
+%%    http://www.latex-project.org/lppl.txt
+%% and version 1.3 or later is part of all distributions of LaTeX
+%% version 2003/12/01 or later.
+%%%%%%%%%%%%%%%%
+
+%% Use the "normalphoto" option if you want a normal photo instead of cropped to a circle
+% \documentclass[10pt,a4paper,withhyper,normalphoto]{altacv}
+
+\documentclass[10pt,a4paper,withhyper]{altacv}
+%% AltaCV uses the fontawesome5 and simpleicons packages.
+%% See http://texdoc.net/pkg/fontawesome5 and http://texdoc.net/pkg/simpleicons for full list of symbols.
+
+% Change the page layout if you need to
+\geometry{left=1.25cm,right=1.25cm,top=1.5cm,bottom=1.5cm,columnsep=1.2cm}
+
+% The paracol package lets you typeset columns of text in parallel
+\usepackage{paracol}
+
+% Change the font if you want to, depending on whether
+% you're using pdflatex or xelatex/lualatex
+% WHEN COMPILING WITH XELATEX PLEASE USE
+% xelatex -shell-escape -output-driver="xdvipdfmx -z 0" sample.tex
+\iftutex
+  % If using xelatex or lualatex:
+  \setmainfont{Roboto Slab}
+  \setsansfont{Lato}
+  \renewcommand{\familydefault}{\sfdefault}
+\else
+  % If using pdflatex:
+  \usepackage[rm]{roboto}
+  \usepackage[defaultsans]{lato}
+  % \usepackage{sourcesanspro}
+  \renewcommand{\familydefault}{\sfdefault}
+\fi
+
+% Change the colours if you want to
+\definecolor{SlateGrey}{HTML}{2E2E2E}
+\definecolor{LightGrey}{HTML}{666666}
+\definecolor{DarkPastelRed}{HTML}{450808}
+\definecolor{PastelRed}{HTML}{8F0D0D}
+\definecolor{GoldenEarth}{HTML}{E7D192}
+\colorlet{name}{black}
+\colorlet{tagline}{PastelRed}
+\colorlet{heading}{DarkPastelRed}
+\colorlet{headingrule}{GoldenEarth}
+\colorlet{subheading}{PastelRed}
+\colorlet{accent}{PastelRed}
+\colorlet{emphasis}{SlateGrey}
+\colorlet{body}{LightGrey}
+
+% Change some fonts, if necessary
+\renewcommand{\namefont}{\Huge\rmfamily\bfseries}
+\renewcommand{\personalinfofont}{\footnotesize}
+\renewcommand{\cvsectionfont}{\LARGE\rmfamily\bfseries}
+\renewcommand{\cvsubsectionfont}{\large\bfseries}
+
+
+% Change the bullets for itemize and rating marker
+% for \cvskill if you want to
+\renewcommand{\cvItemMarker}{{\small\textbullet}}
+\renewcommand{\cvRatingMarker}{\faCircle}
+% ...and the markers for the date/location for \cvevent
+% \renewcommand{\cvDateMarker}{\faCalendar*[regular]}
+\renewcommand{\cvLocationMarker}{}
+
+
+% If your CV/résumé is in a language other than English,
+% then you probably want to change these so that when you
+% copy-paste from the PDF or run pdftotext, the location
+% and date marker icons for \cvevent will paste as correct
+% translations. For example Spanish:
+% \renewcommand{\locationname}{Ubicación}
+% \renewcommand{\datename}{Fecha}
+
+
+%% Use (and optionally edit if necessary) this .tex if you
+%% want to use an author-year reference style like APA(6)
+%% for your publication list
+% \input{pubs-authoryear}
+
+%% Use (and optionally edit if necessary) this .tex if you
+%% want an originally numerical reference style like IEEE
+%% for your publication list
+% \input{pubs-num}
+
+%% sample.bib contains your publications
+% \addbibresource{sample.bib}
+
+% Toggle visibility of Languages section (set to \showlanguagesfalse to hide)
+\newif\ifshowlanguages
+\showlanguagestrue
+
+% Toggle Centric: true = show each C8 role separately (Contractor, Intern App Sec, Intern, QA); false = show one combined entry (Intern → Contractor)
+\newif\ifcentricmulti
+\centricmultifalse
+
+% Toggle non-Centric experience: true = show Tech4Good and Undergraduate Course Support; false = hide them
+\newif\ifshownoncentric
+\shownoncentrictrue
+
+% Toggle skill/course groups (set to \showgroupXXXfalse to hide)
+\newif\ifshowgroupnetworks
+\showgroupnetworkstrue
+\newif\ifshowgroupsecurity
+\showgroupsecuritytrue
+\newif\ifshowgroupaiml
+\showgroupaimltrue
+\newif\ifshowgroupmisc
+\showgroupmisctrue
+\newif\ifshowgrouplanguages
+\showgrouplanguagestrue
+\newif\ifshowgroupframeworks
+\showgroupframeworkstrue
+
+% Toggle each project (set to \showprojectXXXfalse to hide)
+\newif\ifshowprojecttrellix
+\showprojecttrellixtrue
+\newif\ifshowprojectkvm
+\showprojectkvmtrue
+\newif\ifshowprojectbicycle
+\showprojectbicycletrue
+\newif\ifshowprojectllm
+\showprojectllmtrue
+\newif\ifshowprojectslugquest
+\showprojectslugquesttrue
+\newif\ifshowprojectbloombase
+\showprojectbloombasetrue
+
+\begin{document}
+
+% Override \cvevent to shrink location text
+\renewcommand{\cvevent}[4]{%
+  {\large\color{emphasis}#1\par}
+  \smallskip\normalsize
+  \ifstrequal{#2}{}{}{
+  \textbf{\color{accent}#2}\par
+  \smallskip}
+  \ifstrequal{#3}{}{}{%
+    {\small\makebox[0.5\linewidth][l]%
+      {\BeginAccSupp{method=pdfstringdef,ActualText={\datename:}}\cvDateMarker\EndAccSupp{}%
+      ~#3}%
+    }}%
+  \ifstrequal{#4}{}{}{%
+    \par{\scriptsize\makebox[\linewidth][l]%
+      {\BeginAccSupp{method=pdfstringdef,ActualText={\locationname:}}\cvLocationMarker\EndAccSupp{}%
+        ~#4}%
+    }}\par
+  \medskip\normalsize
+}
+
+\name{Alex Asch}
+\tagline{M.S. Student UCSD}
+%% You can add multiple photos on the left or right
+% \photoR{2.8cm}{Globe_High}
+% \photoL{2.5cm}{Yacht_High,Suitcase_High}
+
+\personalinfo{%
+  % Not all of these are required!
+  \email{a.asch2020@gmail.com}
+  \phone{406-623-7277}
+  \location{San Diego, CA}
+  \linkedin{https://www.linkedin.com/in/alex-asch-755270219/}
+  \github{aasch2020}
+  % \orcid{0000-0000-0000-0000}
+  %% You can add your own arbitrary detail with
+  %% \printinfo{symbol}{detail}[optional hyperlink prefix]
+  % \printinfo{\faPaw}{Hey ho!}[https://example.com/]
+
+  %% Or you can declare your own field with
+  %% \NewInfoFiled{fieldname}{symbol}[optional hyperlink prefix] and use it:
+  % \NewInfoField{gitlab}{\faGitlab}[https://gitlab.com/]
+  % \gitlab{your_id}
+  %%
+  %% For services and platforms like Mastodon where there isn't a
+  %% straightforward relation between the user ID/nickname and the hyperlink,
+  %% you can use \printinfo directly e.g.
+  % \printinfo{\faMastodon}{@username@instace}[https://instance.url/@username]
+  %% But if you absolutely want to create new dedicated info fields for
+  %% such platforms, then use \NewInfoField* with a star:
+  % \NewInfoField*{mastodon}{\faMastodon}
+  %% then you can use \mastodon, with TWO arguments where the 2nd argument is
+  %% the full hyperlink.
+  % \mastodon{@username@instance}{https://instance.url/@username}
+}
+
+\makecvheader
+%% Depending on your tastes, you may want to make fonts of itemize environments slightly smaller
+% \AtBeginEnvironment{itemize}{\small}
+
+%% Set the left/right column width ratio to 6:4.
+\columnratio{0.6}
+
+% Start a 2-column paracol. Both the left and right columns will automatically
+% break across pages if things get too long.
+\begin{paracol}{2}
+\cvsection{Experience}
+
+\ifcentricmulti
+\cvevent{Software Engineering Contractor, Application Security}{Centric Software}{September 2024-June 2025}{San Jose, CA}
+\begin{itemize}
+\item Utilized common application security tools including Burp Suite to reproduce pentest findings.
+\item Identified and repaired security vulnerabilities on the C8 platform.
+\item Implemented improved Access control framework for object views and creation.
+\item Re-architected login page to modern React component, and re-configured webpack for authenticated access control.
+\item Remediated many email API endpoint vulnerabilities for phishing prevention and input sanitization.
+\item Improved application configuration and installer to support more secure configurations.
+\end{itemize}
+
+\divider
+
+\cvevent{Software Engineering Intern, Application Security}{Centric Software}{June 2024-September 2024, June 2025-September 2025}{}
+\begin{itemize}
+\item Utilized common application security tools including Burp Suite to reproduce pentest findings.
+\item Identified and repaired security vulnerabilities on the C8 platform using full‑stack knowledge.
+\item Triaged and responded to customer security and pentest findings.
+\item Gained experience across multiple areas of the Centric PLM product.
+\item Leveraged prior knowledge of Centric PLM product to respond to and remediate pentest findings.
+\end{itemize}
+
+\divider
+
+\cvevent{Software Engineering Intern}{Centric Software}{June 2022-September 2022, June 2023-September 2023}{}
+\begin{itemize}
+\item Collaborated within an Agile development team, actively participating in sprint planning, daily stand-ups, and iterative delivery cycles.
+\item Refactored and enhanced existing Java components to integrate with a new architectural framework, improving modularity, maintainability, and code organization.
+\item Designed and implemented front-end enhancements using JavaScript to improve usability and interface functionality.
+\item Contributed to end-to-end feature development, gaining hands-on experience across the full software stack from user interface to backend services.
+\item Modified existing Java code to fit a new framework and increase modularity.
+\item Implemented JavaScript UI changes.
+\end{itemize}
+
+\divider
+
+\cvevent{QA Intern}{Centric Software}{June 2021 - September 2021}{San Jose, CA}
+\begin{itemize}
+\item Worked with Docker and QA tooling to validate web product functionality.
+\item Gained experience with usage of the Centric PLM product and domain.
+\end{itemize}
+
+\else
+\cvevent{Software Engineer (Intern → Contractor), Application Security}{Centric Software}{Summers 2021--2023; June 2024 -- September 2025}{San Jose, CA}
+\begin{itemize}
+\item Utilized common application security tools including Burp Suite to reproduce pentest findings.
+\item Identified and repaired security vulnerabilities on the C8 platform.
+\item Implemented improved Access control framework for object views and creation.
+\item Re-architected login page to modern React component, and re-configured webpack for authenticated access control.
+\item Remediated many email API endpoint vulnerabilities for phishing prevention and input sanitization.
+\item Improved application configuration and installer to support more secure configurations.
+\item Triaged and responded to customer security and pentest findings.
+\item Gained experience across multiple areas of the Centric PLM product.
+\item Leveraged prior knowledge of Centric PLM product to respond to and remediate pentest findings.
+\item Collaborated within an Agile development team, actively participating in sprint planning, daily stand-ups, and iterative delivery cycles.
+\item Refactored and enhanced existing Java components to integrate with a new architectural framework, improving modularity, maintainability, and code organization.
+\item Designed and implemented front-end enhancements using JavaScript to improve usability and interface functionality.
+\item Contributed to end-to-end feature development, gaining hands-on experience across the full software stack from user interface to backend services.
+\item Modified existing Java code to fit a new framework and increase modularity.
+\item Implemented JavaScript UI changes.
+\item Worked with Docker and QA tooling to validate web product functionality.
+\item Gained experience with usage of the Centric PLM product and domain.
+\end{itemize}
+
+\fi
+
+\divider
+\ifshownoncentric
+\cvevent{Tech4Good Components Team}{Tech4Good}{March 2023 - June 2023}{Santa Cruz, CA}
+\begin{itemize}
+\item Gained experience working with Angular component framework.
+\item Created Angular components for the Annota project.
+\item Gained experience working in software development teams.
+\item Completed 4 distinct UI components in the course of one quarter.
+\end{itemize}
+\divider
+\cvevent{Tech4Good Containers Team}{Tech4Good}{June 2023 - December 2023}{Santa Cruz, CA}
+\begin{itemize}
+\item Gained experience working with Angular container framework.
+\item Created Angular containers for the Causeway and ExploreCareers projects.
+\item Gained experience working in software development teams remotely.
+\end{itemize}
+\divider
+\cvevent{Tech4Good Annota Research Dev Team}{Tech4Good}{January 2023 - March 2023}{Santa Cruz, CA}
+\begin{itemize}
+\item Unpaid student research position contributing to an existing project.
+\item Developed software and fixed defects on the Annota collaborative annotation platform.
+\item Used Angular with a Firestore backend to contribute features.
+\item Participated in project research and design discussions.
+\end{itemize}
+\divider
+\cvevent{Undergraduate Course Support}{Tutor and Grader for Computer Science Courses}{January 2023 – March 2024}{Santa Cruz, CA}
+\begin{itemize}
+\item Tutored and graded coursework for Introduction to Computer Networking (CSE 150) and Introduction to Database Systems (CSE 180).
+\item Provided code reviews and exam preparation for networking and database systems.
+\item Worked with Mininet virtual machines to evaluate network topology code.
+\item Reviewed and graded student SQL projects.
+\end{itemize}
+\fi
+\cvsection{Projects}
+
+\ifshowprojecttrellix
+\cvevent{Trellix Software TLS Analysis}{University of California San Diego}{June 2025}{San Diego, CA}
+\begin{itemize}
+\item Traced what Trellix HX monitoring agents send off-host using bpftrace to capture traffic despite TLS and custom crypto; mapped endpoints and payloads; compared Trellix terms to Norton 360.
+\item Designed and used bpftrace probes to trace custom libssl/libcrypto and liblzma in xAgent and Qualys; recovered unencrypted payloads and mapped endpoints (xAgent /poll, config; Qualys CAPI, fragment/finalize, Manifest).
+\item Recovered and interpreted the Qualys SQLite manifest to list collected commands (ps, ls, netstat, /etc/shadow, AWS env, docker ps, etc.); clarified scope of exfiltrated data (processes, files, network, mounts, kernel params, services).
+\end{itemize}
+\fi
+\ifshowprojectkvm
+\cvevent{Enhancing KVM Page Eviction: From FIFO to Approximate LRU}{University of California San Diego}{June 2025}{San Diego, CA}
+\begin{itemize}
+\item Replaced KVM's FIFO shadow-page eviction with Approximate LRU; second-chance clock LRU with access recency and lightweight per-page metadata; made thread-safe for multi-vCPU.
+\item Modified KVM MMU code (mmu.c, mmu\_zap\_oldest\_pages()) collaboratively; helped with benchmark setup, flamegraph analysis, and interpreting results.
+\item Evaluated with stress-ng (fewer page faults) and redis-benchmark (lower latency under load); flamegraphs showed fewer samples in key page-fault paths; shadow MMU path only.
+\end{itemize}
+\fi
+\ifshowprojectbicycle
+\cvevent{Computer Vision Driven Automated Bicycle Braking}{University of California San Diego}{December 2025}{San Diego, CA}
+\begin{itemize}
+\item OptiBrake: front camera with Lucas-Kanade optical flow to detect approaching obstacles; closed-loop controller runs brake motor until wheel speed zero, then reverses to unspool cable.
+\item Worked on wheel odometry, closed-loop brake control, and hardware integration; interrupt-based debounced wheel speed (weighted average of last 9 RPM); helped design and analyze indoor trials.
+\item Showed automated brake actuation from single-camera CV on Raspberry Pi in controlled trials; documented false-positive and outdoor limits (e.g., would need more compute or LIDAR for robustness).
+\end{itemize}
+\fi
+\ifshowprojectllm
+\divider
+\cvevent{LLM Based Security Framework for Chatbot Agents}{University of California San Diego}{September 2025}{San Diego, CA}
+\begin{itemize}
+\item AccessControl Agent: separate LLM predicts tools needed from user prompt and outputs XML policy; reference monitor enforces so agent may only call approved tools in that order.
+\item Created the reference monitor and integrated it with the AI agent; wrote code that converts the LLM's XML file into the state tree; assisted in prompt engineering and XML format, debugging, and deliverables.
+\item Privilege separation (LLM sees only prompt; agent restricted by monitor); monitor caught many injections (e.g., 7/8 Llama, 3/13 GPT 4o); evaluated on simple, single-tool, and complex/conditional prompts.
+\end{itemize}
+\fi
+\ifshowprojectslugquest
+\divider
+\cvevent{Slugquest Project}{University of California Santa Cruz}{January 2024 - March 2024}{Santa Cruz, CA}
+\begin{itemize}
+\item Worked on creating a web app for collaborative and gamified To-Do lists, with calendar support.
+\item Implemented Golang-based backend CRUD API using the Gin web framework, along with SQLite database server.
+\end{itemize}
+\fi
+\ifshowprojectbloombase
+\divider
+\cvevent{Bloombase Project}{University of California Santa Cruz}{March 2023 - June 2023}{Santa Cruz, CA}
+\begin{itemize}
+\item Built a web app integrating the iNaturalist API, Py4Web backend, and Google Maps front-end.
+\item Integrated third-party iNaturalist API for biodiversity data; developed Py4Web backend for data processing and storage; built Google Maps-based frontend for geospatial visualization.
+\item \href{https://github.com/BloomBase183/BloomBase}{GitHub Repository Link}
+\end{itemize}
+\fi
+
+\switchcolumn
+
+
+\cvsection{Skills}
+
+\ifshowgroupnetworks
+\cvtag{Wireshark}
+\cvtag{Mininet}
+\cvtag{QEMU}
+\cvtag{KVM}
+\cvtag{Docker}
+\cvtag{Kubernetes}
+\cvtag{Git}
+\cvtag{CI/CD}
+\cvtag{MySQL}
+\cvtag{MPI}
+\cvtag{GDB}
+\cvtag{Kprobes}
+\cvtag{bpftrace}
+\cvtag{Flamegraphs}
+\divider
+\fi
+
+\ifshowgroupsecurity
+\cvtag{Burp Suite}
+\cvtag{Ghidra}
+\divider
+\fi
+
+\ifshowgroupaiml
+\cvtag{OpenCV}
+\cvtag{CUDA}
+\divider
+\fi
+
+\ifshowgroupmisc
+\cvtag{REST APIs}
+\cvtag{HTML}
+\cvtag{CSS}
+\cvtag{XML}
+\cvtag{Firebase}
+\divider
+\fi
+
+\ifshowgrouplanguages
+\cvtag{Python}
+\cvtag{Java}
+\cvtag{C/C++}
+\cvtag{Go}
+\cvtag{Rust}
+\cvtag{TypeScript}
+\cvtag{SQL}
+\cvtag{Haskell}
+\divider
+\fi
+
+\ifshowgroupframeworks
+\cvtag{Angular}
+\cvtag{Node.js}
+\cvtag{React}
+\cvtag{Webpack}
+\fi
+
+
+\ifshowlanguages
+\cvsection{Languages}
+
+\cvskill{English}{5}
+\divider
+
+\cvskill{Japanese}{3.5}
+
+\fi
+%% Yeah I didn't spend too much time making all the
+%% spacing consistent... sorry. Use \smallskip, \medskip,
+%% \bigskip, \vspace etc to make adjustments.
+\medskip
+
+\cvsection{Education}
+\cvevent{M.S.\ in Computer Science}{University of California San Diego}{Sept 2024 -- Ongoing}{GPA 3.975/4.0}
+
+\ifshowgroupnetworks
+\cvtag{Operating Systems}
+\cvtag{Networked Services}
+\cvtag{Parallel Computation}
+\cvtag{Intro to Embedded Computing}
+\cvtag{Virtualization and Cloud Computing}
+\cvtag{Principles of Database Systems}
+\cvtag{Database System Implementation}
+\cvtag{Exploring Architecture}
+\divider
+\fi
+
+\ifshowgroupsecurity
+\cvtag{Graduate Computer Security}
+\cvtag{Language-based Security}
+\divider
+\fi
+
+\ifshowgroupaiml
+\cvtag{Probabilistic Reasoning and Learning}
+\cvtag{Systems for LLMs and AI Agents}
+\cvtag{Machine Learning for Music}
+\divider
+\fi
+
+\ifshowgroupmisc
+\cvtag{Algorithm Design and Analysis}
+\cvtag{Principles of Programming Languages}
+\cvtag{The Legacy of the Cypherpunks}
+\cvtag{Programmers are People Too}
+\fi
+
+\divider
+
+\cvevent{B.S.\ in Computer Science}{University of California Santa Cruz}{Sept 2020 -- June 2024}{GPA 3.85/4.0}
+
+\cvachievement{\faTrophy}{Graduated Cum Laude}{Awarded to top 15\% of graduating class by GPA}
+
+
+% \divider
+
+
+
+
+\end{paracol}
+
+
+\medskip
+
+
+
+% Adapted from @Jake's answer from http://tex.stackexchange.com/a/82729/226
+% \wheelchart{outer radius}{inner radius}{
+% comma-separated list of value/text width/color/detail}
+
+% use ONLY \newpage if you want to force a page break for
+% ONLY the current column
+\newpage
+
+
+%% Switch to the right column. This will now automatically move to the second
+%% page if the content is too long.
+
+
+\end{document}

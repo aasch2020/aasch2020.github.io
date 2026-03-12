@@ -1,6 +1,6 @@
 # LLM Based Security Framework for Chatbot Agents
 
-**September 2025** | University of California San Diego
+**September 2024** | University of California San Diego
 
 ## Summary
 
