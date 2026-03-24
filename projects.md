@@ -142,7 +142,7 @@
 <a href="/projects/typesast" class="grid-card">
   <div class="card-image-box">
     <img
-      src="/assets/img/projects/ts-sast.png"
+      src="/assets/img/projects/typesast.png"
       alt="Type-Based Static Analysis for Access Control in TypeScript"
       class="card-image"
     />
@@ -163,7 +163,7 @@
     </div>
   </div>
 </a>
-<a href="/projects/LLM-DUI" class="grid-card">
+<a href="/projects/LLM-GUI" class="grid-card">
   <div class="card-image-box">
     <img
       src="/assets/img/projects/llm-gui.png"
