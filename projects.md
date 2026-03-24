@@ -163,7 +163,7 @@
     </div>
   </div>
 </a>
-<a href="/projects/llm-gui" class="grid-card">
+<a href="/projects/LLM-DUI" class="grid-card">
   <div class="card-image-box">
     <img
       src="/assets/img/projects/llm-gui.png"
