@@ -138,7 +138,7 @@
       </div>
     </div>
   </a>
-</div>
+
 <a href="/projects/typesast" class="grid-card">
   <div class="card-image-box">
     <img
@@ -163,6 +163,8 @@
     </div>
   </div>
 </a>
+
+</div>
 
 
 <script src="/assets/js/projects.js"></script>
