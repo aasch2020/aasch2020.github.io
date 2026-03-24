@@ -139,5 +139,53 @@
     </div>
   </a>
 </div>
+<a href="/projects/ts-access-control-sast" class="grid-card">
+  <div class="card-image-box">
+    <img
+      src="/assets/img/projects/ts-sast.png"
+      alt="Type-Based Static Analysis for Access Control in TypeScript"
+      class="card-image"
+    />
+  </div>
 
+  <h3>Type-Based Static Analysis for Access Control in TypeScript</h3>
+
+  <div class="card-two-col">
+    <div>
+      <p>
+        Developed a static application security testing (SAST) system for TypeScript that encodes access control policies directly into the type system to detect authorization bugs at compile time.
+      </p>
+    </div>
+
+    <div class="card-meta">
+      <p><strong>Tech:</strong> TypeScript, Static Analysis, SAST</p>
+      <p><strong>Date:</strong> Jan–Mar 2026</p>
+    </div>
+  </div>
+</a>
+
+<a href="/projects/llm-gui" class="grid-card">
+  <div class="card-image-box">
+    <img
+      src="/assets/img/projects/llm-gui.png"
+      alt="LLM GUI Framework"
+      class="card-image"
+    />
+  </div>
+
+  <h3>LLM GUI Framework</h3>
+
+  <div class="card-two-col">
+    <div>
+      <p>
+        Built a modular GUI framework for interacting with LLM agents, enabling structured tool use, prompt visualization, and real-time response debugging in a browser-based interface.
+      </p>
+    </div>
+
+    <div class="card-meta">
+      <p><strong>Tech:</strong> TypeScript, React, LLMs</p>
+      <p><strong>Date:</strong> Jan–Mar 2026</p>
+    </div>
+  </div>
+</a>
 <script src="/assets/js/projects.js"></script>
