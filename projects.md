@@ -142,7 +142,7 @@
 <a href="/projects/typesast" class="grid-card">
   <div class="card-image-box">
     <img
-      src="/assets/img/projects/typesast.png"
+      src="/assets/img/projects/TypeSAST.png"
       alt="Type-Based Static Analysis for Access Control in TypeScript"
       class="card-image"
     />
