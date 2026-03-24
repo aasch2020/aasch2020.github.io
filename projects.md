@@ -177,7 +177,7 @@
   <div class="card-two-col">
     <div>
       <p>
-        Built a modular GUI framework for interacting with LLM agents, enabling structured tool use, prompt visualization, and real-time response debugging in a browser-based interface.
+        Built a modular GUI framework for interacting with LLM agents, enabling structured tool use, and prompt visualization. Assesed it's usability improvement of user understanding through pilot studies.
       </p>
     </div>
 
