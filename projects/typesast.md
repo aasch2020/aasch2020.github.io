@@ -1,6 +1,5 @@
 # Type-Based Static Analysis for Access Control in TypeScript
 
-**Alex Asch, Eric Huang, Nick Petrone**  
 **June 2025** | University of California San Diego
 
 ## Summary

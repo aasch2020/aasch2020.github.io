@@ -2,8 +2,6 @@
 
 **Fall 2025** | University of California San Diego
 
-# Systems Measurement Benchmarks — Project Copy (v2)
-
 ## Summary
 
 A **C benchmark suite** that measures CPU (timing, procedure and system calls, task creation, context switch), memory (access time, bandwidth, page faults), network (TCP RTT, bandwidth, connection overhead, loopback and remote), and file system (cache size, sequential/random read, remote NFS, contention) on Ubuntu 24.04.03 using TSC timing and lmbench-style methods.
