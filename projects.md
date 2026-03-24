@@ -139,7 +139,7 @@
     </div>
   </a>
 </div>
-<a href="/projects/ts-access-control-sast" class="grid-card">
+<a href="/projects/typesast" class="grid-card">
   <div class="card-image-box">
     <img
       src="/assets/img/projects/ts-sast.png"
@@ -164,28 +164,5 @@
   </div>
 </a>
 
-<a href="/projects/llm-gui" class="grid-card">
-  <div class="card-image-box">
-    <img
-      src="/assets/img/projects/llm-gui.png"
-      alt="LLM GUI Framework"
-      class="card-image"
-    />
-  </div>
 
-  <h3>LLM GUI Framework</h3>
-
-  <div class="card-two-col">
-    <div>
-      <p>
-        Built a modular GUI framework for interacting with LLM agents, enabling structured tool use, prompt visualization, and real-time response debugging in a browser-based interface.
-      </p>
-    </div>
-
-    <div class="card-meta">
-      <p><strong>Tech:</strong> TypeScript, React, LLMs</p>
-      <p><strong>Date:</strong> Jan–Mar 2026</p>
-    </div>
-  </div>
-</a>
 <script src="/assets/js/projects.js"></script>
