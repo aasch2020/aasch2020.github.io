@@ -1,6 +1,6 @@
 # Type-Based Static Analysis for Access Control in TypeScript
 
-**June 2025** | University of California San Diego
+**March 2026** | University of California San Diego
 
 ## Summary
 
