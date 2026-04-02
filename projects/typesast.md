@@ -84,4 +84,4 @@ This hybrid design keeps most analysis **fast and type-driven**, while using sym
 	<a href="/assets/pdfs/typesast.pdf" class="btn" target="_blank" rel="noopener">View PDF</a>
 </div>
 
-[github.com/aasch2020/TypeSAST](https://github.com/aasch2020/TypeSAST)
+[github.com/aasch2020/TypeSAST](https://github.com/aasch2020/TypeSASTprotos)
